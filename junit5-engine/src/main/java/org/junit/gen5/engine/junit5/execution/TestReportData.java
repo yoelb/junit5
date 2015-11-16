@@ -1,3 +1,13 @@
+/*
+ * Copyright 2015 the original author or authors.
+ *
+ * All rights reserved. This program and the accompanying materials are
+ * made available under the terms of the Eclipse Public License v1.0 which
+ * accompanies this distribution and is available at
+ *
+ * http://www.eclipse.org/legal/epl-v10.html
+ */
+
 package org.junit.gen5.engine.junit5.execution;
 
 import java.util.*;
@@ -17,27 +27,19 @@ import java.util.*;
  */
 public class TestReportData {
 
-	
 	private long duration;
-
 
 	// successful and failed assertions
 	private int assertionSuccessCount;
 	private int assertionFailureCount;
 
-
 	// obtained from a @ReportData Map test method argument
-	private Map<String, String> userProvidedReportItems; 
+	private Map<String, String> userProvidedReportItems;
 
-	
 	//no Serializable needed as intended solely for reporting and _not_ for rerunning tests - possible duplication here?
-	private Map<String, String> injectedParameterItems; 
-	
-	
+	private Map<String, String> injectedParameterItems;
+
 	//is this the right place?
-	private Set<String> tags;	
-	
-
-
+	private Set<String> tags;
 
 }
