@@ -27,10 +27,15 @@ import java.util.*;
  */
 public class TestReportData {
 
+	//measured in milliseconds
 	private long duration;
 
 	// successful and failed assertions
+
+	// needs some form of instrumentation of the assertion process
 	private int assertionSuccessCount;
+
+	// > 0 for aggregated asserts
 	private int assertionFailureCount;
 
 	// obtained from a @ReportData Map test method argument
