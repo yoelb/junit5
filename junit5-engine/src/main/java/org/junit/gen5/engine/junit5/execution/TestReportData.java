@@ -15,7 +15,11 @@ import java.util.*;
 /**
  * 
  * very early thoughts...
- * 
+ *
+ * General question:
+ * should such a reporting data container be attached to the testdescriptor or
+ * rather just be injected into the various callbacks of org.junit.gen5.engine.TestExecutionListener
+ *
  * This class is intended to facilitate reporting of different kinds of data to its calling environment.
  * Such data would include measurements (execution time, number of successful and failed assertions), 
  * report items provided explicitly by the user (say, via a @ReportData Map test method argument),
