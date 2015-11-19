@@ -45,4 +45,7 @@ public interface TestExecutionContext {
 
 	Set<MethodParameterResolver> getParameterResolvers();
 
+	//maybe not expose this field but offer delegating setters?
+	TestReportData getTestReportData();
+
 }

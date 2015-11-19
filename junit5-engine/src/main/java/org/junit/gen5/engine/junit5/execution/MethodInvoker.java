@@ -15,13 +15,9 @@ import static java.util.stream.Collectors.toList;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
-import org.junit.gen5.api.extension.MethodParameterResolver;
-import org.junit.gen5.api.extension.ParameterResolutionException;
-import org.junit.gen5.api.extension.TestExecutionContext;
+import org.junit.gen5.api.extension.*;
 import org.junit.gen5.commons.util.Preconditions;
 import org.junit.gen5.commons.util.ReflectionUtils;
 
@@ -95,7 +91,10 @@ class MethodInvoker {
 					"Discovered multiple competing MethodParameterResolvers for parameter [%s] in method [%s]: %s",
 					parameter, this.method.toGenericString(), resolverNames));
 			}
-			return matchingResolvers.get(0).resolve(parameter, testExecutionContext);
+			Object resolvedParameter = matchingResolvers.get(0).resolve(parameter, testExecutionContext);
+			this.recordResolvedParameterForReport(parameter, testExecutionContext, resolvedParameter);
+
+			return resolvedParameter;
 		}
 		catch (Exception ex) {
 			if (ex instanceof ParameterResolutionException) {
@@ -104,6 +103,15 @@ class MethodInvoker {
 			throw new ParameterResolutionException(String.format("Failed to resolve parameter [%s] in method [%s]",
 				parameter, this.method.toGenericString()), ex);
 		}
+	}
+
+	private void recordResolvedParameterForReport(Parameter parameter, TestExecutionContext testExecutionContext,
+			Object resolvedParameter) {
+		TestReportData testReportData = testExecutionContext.getTestReportData();
+
+		System.err.println("XXXXXXX " + resolvedParameter.toString());
+
+		testReportData.getInjectedParameterItems().put(parameter.getName(), resolvedParameter.toString());
 	}
 
 }

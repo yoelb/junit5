@@ -12,6 +12,8 @@ package org.junit.gen5.engine.junit5.execution;
 
 import java.util.*;
 
+import org.junit.gen5.api.extension.*;
+
 /**
  * 
  * very early thoughts...
@@ -29,7 +31,7 @@ import java.util.*;
  * 
  * @since 5.0
  */
-public class TestReportData {
+public class SimpleTestReportData implements TestReportData {
 
 	//measured in milliseconds
 	private long duration;
@@ -46,9 +48,70 @@ public class TestReportData {
 	private Map<String, String> userProvidedReportItems;
 
 	//no Serializable needed as intended solely for reporting and _not_ for rerunning tests - possible duplication here?
+	//we might want to preserve the order - map not ideal?
 	private Map<String, String> injectedParameterItems;
 
 	//is this the right place?
 	private Set<String> tags;
+
+	@Override
+	public long getDuration() {
+		return duration;
+	}
+
+	@Override
+	public int getAssertionSuccessCount() {
+		return assertionSuccessCount;
+	}
+
+	@Override
+	public int getAssertionFailureCount() {
+		return assertionFailureCount;
+	}
+
+	@Override
+	public Map<String, String> getUserProvidedReportItems() {
+		return userProvidedReportItems;
+	}
+
+	@Override
+	public Map<String, String> getInjectedParameterItems() {
+		return injectedParameterItems;
+	}
+
+	@Override
+	public Set<String> getTags() {
+		return tags;
+	}
+
+	@Override
+	public void setDuration(long duration) {
+		this.duration = duration;
+	}
+
+	@Override
+	public void setAssertionSuccessCount(int assertionSuccessCount) {
+		this.assertionSuccessCount = assertionSuccessCount;
+	}
+
+	@Override
+	public void setAssertionFailureCount(int assertionFailureCount) {
+		this.assertionFailureCount = assertionFailureCount;
+	}
+
+	@Override
+	public void setUserProvidedReportItems(Map<String, String> userProvidedReportItems) {
+		this.userProvidedReportItems = userProvidedReportItems;
+	}
+
+	@Override
+	public void setInjectedParameterItems(Map<String, String> injectedParameterItems) {
+		this.injectedParameterItems = injectedParameterItems;
+	}
+
+	@Override
+	public void setTags(Set<String> tags) {
+		this.tags = tags;
+	}
 
 }

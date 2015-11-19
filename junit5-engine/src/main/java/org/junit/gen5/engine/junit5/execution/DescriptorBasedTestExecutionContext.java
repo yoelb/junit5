@@ -23,9 +23,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import org.junit.gen5.api.extension.ExtendWith;
-import org.junit.gen5.api.extension.MethodParameterResolver;
-import org.junit.gen5.api.extension.TestExecutionContext;
+import org.junit.gen5.api.extension.*;
 import org.junit.gen5.engine.TestDescriptor;
 import org.junit.gen5.engine.junit5.descriptor.ClassTestDescriptor;
 import org.junit.gen5.engine.junit5.descriptor.MethodTestDescriptor;
@@ -49,6 +47,8 @@ class DescriptorBasedTestExecutionContext implements TestExecutionContext {
 	private final TestExecutionContext parent;
 
 	private final Set<MethodParameterResolver> resolvers = new HashSet<>();
+
+	private final TestReportData testReportData = new SimpleTestReportData();
 
 	DescriptorBasedTestExecutionContext(TestDescriptor descriptor, TestExecutionContext parent, Object testInstance) {
 
@@ -95,6 +95,12 @@ class DescriptorBasedTestExecutionContext implements TestExecutionContext {
 		// @formatter:off
 
 		return resolverRegistry.getResolvers();
+	}
+
+
+	@Override
+	public TestReportData getTestReportData() {
+		return this.testReportData;
 	}
 
 	@Override
