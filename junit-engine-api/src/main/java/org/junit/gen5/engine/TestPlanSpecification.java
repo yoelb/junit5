@@ -10,20 +10,25 @@
 
 package org.junit.gen5.engine;
 
-import static java.util.Arrays.stream;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 
+import java.io.File;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.gen5.commons.util.Preconditions;
+import org.junit.gen5.commons.util.ReflectionUtils;
 
 /**
  * @author Sam Brannen
@@ -36,23 +41,53 @@ public final class TestPlanSpecification implements Iterable<TestPlanSpecificati
 	}
 
 	public static List<TestPlanSpecificationElement> forPackages(Collection<String> packageNames) {
-		return packageNames.stream().map(PackageSpecification::new).collect(toList());
+		return packageNames.stream().map(TestPlanSpecification::forPackage).collect(toList());
 	}
 
-	public static TestPlanSpecificationElement forClassName(String className) {
-		return new ClassNameSpecification(className);
+	public static TestPlanSpecificationElement forMethod(Class<?> testClass, Method testMethod) {
+		return new MethodSpecification(testClass, testMethod);
 	}
 
-	public static List<TestPlanSpecificationElement> forClassNames(String... classNames) {
-		return forClassNames(stream(classNames));
+	public static TestPlanSpecificationElement forName(String anyName) {
+
+		Optional<Class<?>> testClassOptional = ReflectionUtils.loadClass(anyName);
+		if (testClassOptional.isPresent()) {
+			return forClass(testClassOptional.get());
+		}
+
+		Optional<Method> testMethodOptional = ReflectionUtils.loadMethod(anyName);
+		if (testMethodOptional.isPresent()) {
+			Method testMethod = testMethodOptional.get();
+			return forMethod(testMethod.getDeclaringClass(), testMethod);
+		}
+
+		if (ReflectionUtils.isPackage(anyName)) {
+			return forPackage(anyName);
+		}
+
+		throw new IllegalArgumentException(
+			String.format("'%s' specifies neither a class, nor a method, nor a package.", anyName));
 	}
 
-	public static List<TestPlanSpecificationElement> forClassNames(Collection<String> classNames) {
-		return forClassNames(classNames.stream());
+	public static List<TestPlanSpecificationElement> allTests(Set<File> rootDirectories) {
+		// @formatter:off
+		return rootDirectories.stream()
+				.filter(File::exists)
+				.map(AllTestsSpecification::new)
+				.collect(Collectors.toList());
+		// @formatter:on
 	}
 
-	public static List<TestPlanSpecificationElement> forClassNames(Stream<String> classNames) {
-		return classNames.map(ClassNameSpecification::new).collect(toList());
+	public static List<TestPlanSpecificationElement> forNames(Collection<String> classNames) {
+		return forNames(classNames.stream());
+	}
+
+	private static List<TestPlanSpecificationElement> forNames(Stream<String> classNames) {
+		return classNames.map(TestPlanSpecification::forName).collect(toList());
+	}
+
+	public static TestPlanSpecificationElement forClass(Class<?> testClass) {
+		return new ClassSpecification(testClass);
 	}
 
 	public static TestPlanSpecificationElement forUniqueId(String uniqueId) {

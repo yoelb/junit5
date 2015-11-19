@@ -17,23 +17,26 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * {@code @Name} is used to declare a custom display name for the annotated
- * test class or test method.
+ * {@code @BeforeEach} is used to signal that the annotated method should be
+ * executed <em>before</em> <strong>each</strong> {@code @Test} method in
+ * the current test class or test class hierarchy.
  *
- * <p>Display names are typically used for test reporting in IDEs and build
- * tools and may contain spaces, special characters, and even emoji.
+ * <p>{@code @BeforeEach} methods must not be {@code private} or {@code static}.
  *
- * @author Johannes Link
+ * <p>{@code @BeforeEach} methods may optionally declare parameters to be
+ * resolved by {@link org.junit.gen5.api.extension.MethodParameterResolver
+ * MethodParameterResolvers}.
+ *
+ * @author Matthias Merdes
  * @author Sam Brannen
  * @since 5.0
+ * @see AfterEach
+ * @see BeforeAll
+ * @see AfterAll
  * @see Test
- * @see TestName
  */
-@Target({ ElementType.TYPE, ElementType.METHOD })
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface Name {
-
-	String value();
-
+public @interface BeforeEach {
 }

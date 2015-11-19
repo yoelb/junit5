@@ -10,7 +10,7 @@
 
 package org.junit.gen5.engine;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
 
@@ -30,4 +30,31 @@ public class TestPlanSpecificationTests {
 		assertNotNull(specification);
 	}
 
+	@Test
+	public void testForNameWithClass() {
+		TestPlanSpecificationElement specification = TestPlanSpecification.forName(MyTestClass.class.getName());
+		assertEquals(ClassSpecification.class, specification.getClass());
+	}
+
+	@Test
+	public void testForNameWithMethod() throws NoSuchMethodException {
+		String methodName = MyTestClass.class.getName() + "#" + MyTestClass.class.getDeclaredMethod("myTest").getName();
+		TestPlanSpecificationElement specification = TestPlanSpecification.forName(methodName);
+		assertEquals(MethodSpecification.class, specification.getClass());
+	}
+
+	@Test
+	public void testForNameWithPackage() throws NoSuchMethodException {
+		String packageName = "org.junit.gen5";
+		TestPlanSpecificationElement specification = TestPlanSpecification.forName(packageName);
+		assertEquals(PackageSpecification.class, specification.getClass());
+	}
+}
+
+class MyTestClass {
+
+	@Test
+	void myTest() {
+
+	}
 }

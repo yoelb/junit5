@@ -19,8 +19,9 @@ import java.util.stream.Collectors;
 
 import org.junit.gen5.api.Context;
 import org.junit.gen5.api.Test;
-import org.junit.gen5.engine.ClassNameSpecification;
+import org.junit.gen5.engine.ClassSpecification;
 import org.junit.gen5.engine.EngineDescriptor;
+import org.junit.gen5.engine.MethodSpecification;
 import org.junit.gen5.engine.PackageSpecification;
 import org.junit.gen5.engine.TestDescriptor;
 import org.junit.gen5.engine.UniqueIdSpecification;
@@ -32,8 +33,8 @@ public class SpecificationResolverTest {
 	private SpecificationResolver resolver = new SpecificationResolver(engineDescriptor);
 
 	@org.junit.Test
-	public void testSingleClassNameResolution() {
-		ClassNameSpecification specification = new ClassNameSpecification(MyTestClass.class.getName());
+	public void testSingleClassResolution() {
+		ClassSpecification specification = new ClassSpecification(MyTestClass.class);
 
 		resolver.resolveElement(specification);
 
@@ -45,9 +46,27 @@ public class SpecificationResolverTest {
 	}
 
 	@org.junit.Test
-	public void testClassNameResolutionOfNestedClass() {
-		ClassNameSpecification specification = new ClassNameSpecification(
-			OtherTestClass.NestedTestClass.class.getName());
+	public void testTwoClassesResolution() {
+		ClassSpecification specification1 = new ClassSpecification(MyTestClass.class);
+		ClassSpecification specification2 = new ClassSpecification(YourTestClass.class);
+
+		resolver.resolveElement(specification1);
+		resolver.resolveElement(specification2);
+
+		assertEquals(6, engineDescriptor.allChildren().size());
+		List<String> uniqueIds = engineDescriptor.allChildren().stream().map(d -> d.getUniqueId()).collect(
+			Collectors.toList());
+		assertTrue(uniqueIds.contains("junit5:org.junit.gen5.engine.junit5.descriptor.MyTestClass"));
+		assertTrue(uniqueIds.contains("junit5:org.junit.gen5.engine.junit5.descriptor.MyTestClass#test1()"));
+		assertTrue(uniqueIds.contains("junit5:org.junit.gen5.engine.junit5.descriptor.MyTestClass#test2()"));
+		assertTrue(uniqueIds.contains("junit5:org.junit.gen5.engine.junit5.descriptor.YourTestClass"));
+		assertTrue(uniqueIds.contains("junit5:org.junit.gen5.engine.junit5.descriptor.YourTestClass#test3()"));
+		assertTrue(uniqueIds.contains("junit5:org.junit.gen5.engine.junit5.descriptor.YourTestClass#test4()"));
+	}
+
+	@org.junit.Test
+	public void testClassResolutionOfNestedClass() {
+		ClassSpecification specification = new ClassSpecification(OtherTestClass.NestedTestClass.class);
 
 		resolver.resolveElement(specification);
 
@@ -62,22 +81,38 @@ public class SpecificationResolverTest {
 	}
 
 	@org.junit.Test
-	public void testTwoClassNameResolution() {
-		ClassNameSpecification specification1 = new ClassNameSpecification(MyTestClass.class.getName());
-		ClassNameSpecification specification2 = new ClassNameSpecification(YourTestClass.class.getName());
+	public void testMethodResolution() throws NoSuchMethodException {
+		MethodSpecification specification = new MethodSpecification(
+			MyTestClass.class.getDeclaredMethod("test1").getDeclaringClass(),
+			MyTestClass.class.getDeclaredMethod("test1"));
 
-		resolver.resolveElement(specification1);
-		resolver.resolveElement(specification2);
+		resolver.resolveElement(specification);
 
-		assertEquals(6, engineDescriptor.allChildren().size());
-		List<String> uniqueIds = engineDescriptor.allChildren().stream().map(d -> d.getUniqueId()).collect(
-			Collectors.toList());
+		assertEquals(2, engineDescriptor.allChildren().size());
+		List<String> uniqueIds = uniqueIds();
 		assertTrue(uniqueIds.contains("junit5:org.junit.gen5.engine.junit5.descriptor.MyTestClass"));
 		assertTrue(uniqueIds.contains("junit5:org.junit.gen5.engine.junit5.descriptor.MyTestClass#test1()"));
-		assertTrue(uniqueIds.contains("junit5:org.junit.gen5.engine.junit5.descriptor.MyTestClass#test2()"));
-		assertTrue(uniqueIds.contains("junit5:org.junit.gen5.engine.junit5.descriptor.YourTestClass"));
-		assertTrue(uniqueIds.contains("junit5:org.junit.gen5.engine.junit5.descriptor.YourTestClass#test3()"));
-		assertTrue(uniqueIds.contains("junit5:org.junit.gen5.engine.junit5.descriptor.YourTestClass#test4()"));
+	}
+
+	@org.junit.Test
+	public void testMethodResolutionFromInheritedMethod() throws NoSuchMethodException {
+		MethodSpecification specification = new MethodSpecification(HerTestClass.class,
+			MyTestClass.class.getDeclaredMethod("test1"));
+
+		resolver.resolveElement(specification);
+
+		assertEquals(2, engineDescriptor.allChildren().size());
+		List<String> uniqueIds = uniqueIds();
+		assertTrue(uniqueIds.contains("junit5:org.junit.gen5.engine.junit5.descriptor.HerTestClass"));
+		assertTrue(uniqueIds.contains("junit5:org.junit.gen5.engine.junit5.descriptor.HerTestClass#test1()"));
+	}
+
+	@org.junit.Test(expected = IllegalArgumentException.class)
+	public void testResolutionOfNotTestMethod() throws NoSuchMethodException {
+		MethodSpecification specification = new MethodSpecification(
+			MyTestClass.class.getDeclaredMethod("notATest").getDeclaringClass(),
+			MyTestClass.class.getDeclaredMethod("notATest"));
+		resolver.resolveElement(specification);
 	}
 
 	@org.junit.Test
@@ -233,10 +268,12 @@ public class SpecificationResolverTest {
 	}
 
 	@org.junit.Test
-	public void testContextResolutionFromContainerClass() {
-		ClassNameSpecification specification = new ClassNameSpecification(TestCaseWithContexts.class.getName());
+	public void testContextResolutionFromBaseClass() {
+		ClassSpecification specification = new ClassSpecification(TestCaseWithContexts.class);
 
 		resolver.resolveElement(specification);
+
+		engineDescriptor.allChildren().stream().forEach(d -> System.out.println(d));
 
 		List<String> uniqueIds = engineDescriptor.allChildren().stream().map(d -> d.getUniqueId()).collect(
 			Collectors.toList());
@@ -256,8 +293,7 @@ public class SpecificationResolverTest {
 
 	@org.junit.Test
 	public void testContextResolutionFromContextClass() {
-		ClassNameSpecification specification = new ClassNameSpecification(
-			TestCaseWithContexts.InnerContext.class.getName());
+		ClassSpecification specification = new ClassSpecification(TestCaseWithContexts.InnerContext.class);
 
 		resolver.resolveElement(specification);
 
@@ -280,6 +316,26 @@ public class SpecificationResolverTest {
 	public void testContextResolutionFromUniqueId() {
 		UniqueIdSpecification specification = new UniqueIdSpecification(
 			"junit5:org.junit.gen5.engine.junit5.descriptor.TestCaseWithContexts@InnerContext@InnerInnerContext");
+
+		resolver.resolveElement(specification);
+
+		List<String> uniqueIds = engineDescriptor.allChildren().stream().map(d -> d.getUniqueId()).collect(
+			Collectors.toList());
+		assertEquals(4, uniqueIds.size());
+
+		assertTrue(uniqueIds.contains("junit5:org.junit.gen5.engine.junit5.descriptor.TestCaseWithContexts"));
+		assertTrue(
+			uniqueIds.contains("junit5:org.junit.gen5.engine.junit5.descriptor.TestCaseWithContexts@InnerContext"));
+		assertTrue(uniqueIds.contains(
+			"junit5:org.junit.gen5.engine.junit5.descriptor.TestCaseWithContexts@InnerContext@InnerInnerContext"));
+		assertTrue(uniqueIds.contains(
+			"junit5:org.junit.gen5.engine.junit5.descriptor.TestCaseWithContexts@InnerContext@InnerInnerContext#testC()"));
+	}
+
+	@org.junit.Test
+	public void testContextResolutionFromClass() {
+		ClassSpecification specification = new ClassSpecification(
+			TestCaseWithContexts.InnerContext.InnerInnerContext.class);
 
 		resolver.resolveElement(specification);
 

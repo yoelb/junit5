@@ -13,25 +13,33 @@ package org.junit.gen5.api.extension;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation used to declare all types of test decorators.
+ * {@code @ExtendWith} is a {@linkplain Repeatable repeatable} annotation
+ * that is used to register {@linkplain TestExtension test extensions} for
+ * the annotated test class or test method.
  *
- * <p>See concrete implementations of {@link TestDecorator} for details.
+ * <h3>Supported Extension APIs</h3>
+ * <ul>
+ * <li>{@link MethodParameterResolver}</li>
+ * </ul>
  *
  * @author Sam Brannen
  * @since 5.0
+ * @see TestExtension
  * @see MethodParameterResolver
  */
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-public @interface TestDecorators {
+@Repeatable(Extensions.class)
+public @interface ExtendWith {
 
-	Class<? extends TestDecorator>[]value();
+	Class<? extends TestExtension>[]value();
 
 }

@@ -12,6 +12,7 @@ package org.junit.gen5.commons.util;
 
 import static java.util.stream.Collectors.toList;
 
+import java.io.File;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -23,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -57,8 +59,16 @@ public final class ReflectionUtils {
 		return Modifier.isPrivate(clazz.getModifiers());
 	}
 
+	public static boolean isPublic(Class<?> clazz) {
+		return Modifier.isPublic(clazz.getModifiers());
+	}
+
 	public static boolean isPrivate(Member member) {
 		return Modifier.isPrivate(member.getModifiers());
+	}
+
+	public static boolean isPublic(Member member) {
+		return Modifier.isPublic(member.getModifiers());
 	}
 
 	public static boolean isAbstract(Class<?> clazz) {
@@ -86,7 +96,7 @@ public final class ReflectionUtils {
 			makeAccessible(constructor);
 			return constructor.newInstance(args);
 		}
-		catch (Exception ex) {
+		catch (Throwable ex) {
 			handleException(ex);
 		}
 
@@ -94,15 +104,27 @@ public final class ReflectionUtils {
 		throw new IllegalStateException("Exception handling algorithm in ReflectionUtils is incomplete");
 	}
 
+	/**
+	 * Invoke the supplied method, making it accessible if necessary and
+	 * wrapping any checked exception in an {@code IllegalStateException}.
+	 *
+	 * @param method the method to invoke
+	 * @param target the object on which to invoke the method; may be
+	 * {@code null} if the method is {@code static}
+	 * @param args the arguments to pass to the method
+	 * @return the value returned by the method invocation or {@code null}
+	 * if the return type is {@code void}
+	 */
 	public static Object invokeMethod(Method method, Object target, Object... args) {
 		Preconditions.notNull(method, "method must not be null");
-		Preconditions.notNull(target, "target must not be null");
+		Preconditions.condition((target != null || Modifier.isStatic(method.getModifiers())),
+			() -> String.format("Cannot invoke non-static method [%s] on a null target.", method.toGenericString()));
 
 		try {
 			makeAccessible(method);
 			return method.invoke(target, args);
 		}
-		catch (Exception ex) {
+		catch (Throwable ex) {
 			handleException(ex);
 		}
 
@@ -152,10 +174,37 @@ public final class ReflectionUtils {
 		}
 	}
 
+	/**
+	 * Try to load a method by its fully qualified name (if such a thing exists for methods).
+	 * @param fullyQualifiedMethodName In the form 'package.subpackage.ClassName#methodName'
+	 * @return Optional of Method
+	 */
+	public static Optional<Method> loadMethod(String fullyQualifiedMethodName) {
+		Preconditions.notBlank(fullyQualifiedMethodName, "full method name must not be null or empty");
+		//TODO Handle overloaded and inherited methods
+
+		Optional<Method> testMethodOptional = Optional.empty();
+		int hashPosition = fullyQualifiedMethodName.lastIndexOf('#');
+		if (hashPosition >= 0 && hashPosition < fullyQualifiedMethodName.length()) {
+			String className = fullyQualifiedMethodName.substring(0, hashPosition);
+			String methodName = fullyQualifiedMethodName.substring(hashPosition + 1);
+			Optional<Class<?>> methodClassOptional = loadClass(className);
+			if (methodClassOptional.isPresent()) {
+				try {
+					testMethodOptional = Optional.of(methodClassOptional.get().getDeclaredMethod(methodName));
+				}
+				catch (NoSuchMethodException ignore) {
+				}
+			}
+		}
+		return testMethodOptional;
+	}
+
 	public static Optional<Object> getOuterInstance(Object inner) {
 		// This is risky since it depends on the name of the field which is nowhere guaranteed
 		// but has been stable so far in all JDKs
-		Optional<Object> outerInstance = Arrays.stream(inner.getClass().getDeclaredFields()).filter(
+
+		return Arrays.stream(inner.getClass().getDeclaredFields()).filter(
 			f -> f.getName().startsWith("this$")).findFirst().map(f -> {
 				makeAccessible(f);
 				try {
@@ -165,12 +214,33 @@ public final class ReflectionUtils {
 					return Optional.empty();
 				}
 			});
-
-		return outerInstance;
 	}
 
-	public static Class<?>[] findAllClassesInPackage(String basePackageName) {
-		return new ClasspathScanner(basePackageName).scanForClassesRecursively();
+	public static boolean isPackage(String packageName) {
+		return new ClasspathScanner(ReflectionUtils::getDefaultClassLoader, ReflectionUtils::loadClass).isPackage(
+			packageName);
+	}
+
+	public static Set<File> getAllClasspathRootDirectories() {
+		//TODO This is quite a hack, since sometimes the classpath is quite different
+		String fullClassPath = System.getProperty("java.class.path");
+		final String separator = System.getProperty("path.separator");
+		// @formatter:off
+		return Arrays.stream(fullClassPath.split(separator))
+				.filter(part -> !part.endsWith(".jar"))
+				.map(File::new)
+				.collect(Collectors.toSet());
+		// @formatter:on
+	}
+
+	public static List<Class<?>> findAllClassesInClasspathRoot(File root, Predicate<Class<?>> classTester) {
+		return new ClasspathScanner(ReflectionUtils::getDefaultClassLoader,
+			ReflectionUtils::loadClass).scanForClassesInClasspathRoot(root, classTester);
+	}
+
+	public static List<Class<?>> findAllClassesInPackage(String basePackageName, Predicate<Class<?>> classTester) {
+		return new ClasspathScanner(ReflectionUtils::getDefaultClassLoader,
+			ReflectionUtils::loadClass).scanForClassesInPackage(basePackageName, classTester);
 	}
 
 	public static List<Class<?>> findInnerClasses(Class<?> clazz, Predicate<Class<?>> predicate) {
@@ -248,8 +318,8 @@ public final class ReflectionUtils {
 		List<Method> allInterfaceMethods = new ArrayList<>();
 		for (Class<?> ifc : clazz.getInterfaces()) {
 
-			List<Method> localMethods = Arrays.stream(ifc.getDeclaredMethods()).filter(
-				method -> method.isDefault()).collect(Collectors.toList());
+			List<Method> localMethods = Arrays.stream(ifc.getDeclaredMethods()).filter(Method::isDefault).collect(
+				Collectors.toList());
 
 			// @formatter:off
 			List<Method> subInterfaceMethods = getInterfaceMethods(ifc, sortOrder).stream()
@@ -312,6 +382,9 @@ public final class ReflectionUtils {
 		if (ex instanceof NoSuchMethodException) {
 			throw new IllegalStateException("No such method or constructor", ex);
 		}
+		if (ex instanceof NoSuchFieldException) {
+			throw new IllegalStateException("No such field", ex);
+		}
 		if (ex instanceof InstantiationException) {
 			throw new IllegalStateException("Instantiation failed", ex);
 		}
@@ -324,6 +397,7 @@ public final class ReflectionUtils {
 		if (ex instanceof Error) {
 			throw (Error) ex;
 		}
+		throw new IllegalStateException("Unhandled exception", ex);
 	}
 
 }

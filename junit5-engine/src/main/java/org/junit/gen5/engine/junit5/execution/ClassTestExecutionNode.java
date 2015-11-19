@@ -14,17 +14,22 @@ import static org.junit.gen5.commons.util.AnnotationUtils.findAnnotatedMethods;
 import static org.junit.gen5.commons.util.ReflectionUtils.invokeMethod;
 import static org.junit.gen5.commons.util.ReflectionUtils.newInstance;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.gen5.api.After;
 import org.junit.gen5.api.AfterAll;
-import org.junit.gen5.api.Before;
+import org.junit.gen5.api.AfterEach;
 import org.junit.gen5.api.BeforeAll;
+import org.junit.gen5.api.BeforeEach;
 import org.junit.gen5.api.Condition.Result;
+import org.junit.gen5.api.TestInstance;
+import org.junit.gen5.api.TestInstance.Lifecycle;
 import org.junit.gen5.api.extension.MethodParameterResolver;
 import org.junit.gen5.api.extension.TestExecutionContext;
+import org.junit.gen5.commons.util.AnnotationUtils;
 import org.junit.gen5.commons.util.ReflectionUtils.MethodSortOrder;
 import org.junit.gen5.engine.ExecutionRequest;
 import org.junit.gen5.engine.junit5.descriptor.ClassTestDescriptor;
@@ -55,11 +60,15 @@ class ClassTestExecutionNode extends TestExecutionNode {
 		}
 
 		Class<?> testClass = context.getTestClass().get();
-		Object testInstance = createTestInstance();
+		boolean instancePerClass = isInstancePerClassMode(testClass);
+		Object testInstance = (instancePerClass ? createTestInstance() : null);
 
 		try {
 			executeBeforeAllMethods(testClass, testInstance);
 			for (TestExecutionNode child : getChildren()) {
+				if (!instancePerClass) {
+					testInstance = createTestInstance();
+				}
 				executeChild(child, request, context, testInstance);
 			}
 		}
@@ -67,27 +76,40 @@ class ClassTestExecutionNode extends TestExecutionNode {
 			request.getTestExecutionListener().testFailed(getTestDescriptor(), e);
 		}
 		finally {
-			executeAfterAllMethods(request, testClass, testInstance);
+			executeAfterAllMethods(request, testClass, (instancePerClass ? testInstance : null));
 		}
 	}
 
 	@Override
 	protected String buildTestSkippedMessage(Result result, TestExecutionContext context) {
-		return String.format("Skipping test class [%s]; reason: %s", context.getTestClass().get().getName(),
+		return String.format("Skipped test class [%s]; reason: %s", context.getTestClass().get().getName(),
 			result.getReason().orElse("unknown"));
 	}
 
+	private boolean isInstancePerClassMode(Class<?> testClass) {
+		// @formatter:off
+		return AnnotationUtils.findAnnotation(testClass, TestInstance.class)
+				.map(TestInstance::value)
+				.map(lifecycle -> (lifecycle == Lifecycle.PER_CLASS))
+				.orElse(false);
+		// @formatter:on
+	}
+
 	private void executeBeforeAllMethods(Class<?> testClass, Object testInstance) throws Exception {
-		for (Method method : findAnnotatedMethods(testClass, BeforeAll.class, MethodSortOrder.HierarchyDown)) {
+		Class<BeforeAll> annotationType = BeforeAll.class;
+		for (Method method : findAnnotatedMethods(testClass, annotationType, MethodSortOrder.HierarchyDown)) {
+			validateBeforeAllOrAfterAllMethod(annotationType, method, testInstance);
 			invokeMethod(method, testInstance);
 		}
 	}
 
 	private void executeAfterAllMethods(ExecutionRequest context, Class<?> testClass, Object testInstance) {
+		Class<AfterAll> annotationType = AfterAll.class;
 		Exception exceptionDuringAfterAll = null;
 
-		for (Method method : findAnnotatedMethods(testClass, AfterAll.class, MethodSortOrder.HierarchyUp)) {
+		for (Method method : findAnnotatedMethods(testClass, annotationType, MethodSortOrder.HierarchyUp)) {
 			try {
+				validateBeforeAllOrAfterAllMethod(annotationType, method, testInstance);
 				invokeMethod(method, testInstance);
 			}
 			catch (Exception e) {
@@ -102,6 +124,15 @@ class ClassTestExecutionNode extends TestExecutionNode {
 
 		if (exceptionDuringAfterAll != null) {
 			context.getTestExecutionListener().testFailed(getTestDescriptor(), exceptionDuringAfterAll);
+		}
+	}
+
+	private void validateBeforeAllOrAfterAllMethod(Class<? extends Annotation> annotationType, Method method,
+			Object target) {
+		if (target == null && !Modifier.isStatic(method.getModifiers())) {
+			throw new IllegalStateException(String.format(
+				"Failed to invoke @%s method [%s]. Either declare it as static or annotate the test class with @TestInstance(PER_CLASS).",
+				annotationType.getSimpleName(), method.toGenericString()));
 		}
 	}
 
@@ -129,7 +160,8 @@ class ClassTestExecutionNode extends TestExecutionNode {
 	}
 
 	protected List<Method> getBeforeEachMethods() {
-		return findAnnotatedMethods(getTestDescriptor().getTestClass(), Before.class, MethodSortOrder.HierarchyDown);
+		return findAnnotatedMethods(getTestDescriptor().getTestClass(), BeforeEach.class,
+			MethodSortOrder.HierarchyDown);
 	}
 
 	@Override
@@ -146,7 +178,7 @@ class ClassTestExecutionNode extends TestExecutionNode {
 	}
 
 	protected List<Method> getAfterEachMethods() {
-		return findAnnotatedMethods(getTestDescriptor().getTestClass(), After.class, MethodSortOrder.HierarchyUp);
+		return findAnnotatedMethods(getTestDescriptor().getTestClass(), AfterEach.class, MethodSortOrder.HierarchyUp);
 	}
 
 }

@@ -8,32 +8,37 @@
  * http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.junit.gen5.api;
+package org.junit.gen5.api.extension;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * {@code @Name} is used to declare a custom display name for the annotated
- * test class or test method.
+ * {@code @Extensions} is a container for one or more {@code @ExtendWith}
+ * declarations.
  *
- * <p>Display names are typically used for test reporting in IDEs and build
- * tools and may contain spaces, special characters, and even emoji.
+ * <p>Note, however, that use of the {@code @Extensions} container is completely
+ * optional since {@code @ExtendWith} is a {@linkplain java.lang.annotation.Repeatable
+ * repeatable} annotation.
  *
- * @author Johannes Link
  * @author Sam Brannen
  * @since 5.0
- * @see Test
- * @see TestName
+ * @see ExtendWith
+ * @see java.lang.annotation.Repeatable
  */
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface Name {
+@Inherited
+public @interface Extensions {
 
-	String value();
+	/**
+	 * An array of one or more {@link ExtendWith @ExtendWith} declarations.
+	 */
+	ExtendWith[]value();
 
 }

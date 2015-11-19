@@ -8,13 +8,17 @@
  * http://www.eclipse.org/legal/epl-v10.html
  */
 
-package org.junit.gen5.api.extension;
+package org.junit.gen5.engine;
 
-/**
- * Marker interface for all test decorators.
- *
- * @author Sam Brannen
- * @since 5.0
- */
-public interface TestDecorator {
+import lombok.Value;
+
+@Value
+public class ClassSpecification implements TestPlanSpecificationElement {
+
+	private Class<?> testClass;
+
+	@Override
+	public void accept(TestPlanSpecificationVisitor visitor) {
+		visitor.visitClassSpecification(testClass);
+	}
 }

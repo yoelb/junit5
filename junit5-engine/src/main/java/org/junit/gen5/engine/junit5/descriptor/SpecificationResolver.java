@@ -10,12 +10,12 @@
 
 package org.junit.gen5.engine.junit5.descriptor;
 
-import static org.junit.gen5.commons.util.ReflectionUtils.findInnerClasses;
-import static org.junit.gen5.commons.util.ReflectionUtils.findMethods;
+import static org.junit.gen5.commons.util.ReflectionUtils.*;
 
+import java.io.File;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.gen5.commons.util.ReflectionUtils;
 import org.junit.gen5.engine.AbstractTestDescriptor;
@@ -46,8 +46,13 @@ public class SpecificationResolver {
 		element.accept(new TestPlanSpecificationVisitor() {
 
 			@Override
-			public void visitClassNameSpecification(String className) {
-				resolveClassNameSpecification(className);
+			public void visitClassSpecification(Class<?> testClass) {
+				resolveClassSpecification(testClass);
+			}
+
+			@Override
+			public void visitMethodSpecification(Class<?> testClass, Method testMethod) {
+				resolveMethodSpecification(testClass, testMethod);
 			}
 
 			@Override
@@ -57,24 +62,29 @@ public class SpecificationResolver {
 
 			@Override
 			public void visitPackageSpecification(String packageName) {
-				resolvePackageSpecification(packageName);
+				findAllClassesInPackage(packageName, isTestClassWithTests).stream().forEach(
+					this::visitClassSpecification);
+			}
+
+			@Override
+			public void visitAllTestsSpecification(File rootDirectory) {
+				ReflectionUtils.findAllClassesInClasspathRoot(rootDirectory, isTestClassWithTests).stream().forEach(
+					this::visitClassSpecification);
 			}
 		});
 	}
 
-	private void resolvePackageSpecification(String packageName) {
-		Class<?>[] candidateClasses = ReflectionUtils.findAllClassesInPackage(packageName);
-		Arrays.stream(candidateClasses).filter(isTestClassWithTests).forEach(
-			testClass -> resolveTestable(JUnit5Testable.fromClass(testClass, engineDescriptor.getUniqueId())));
+	private void resolveClassSpecification(Class<?> testClass) {
+		JUnit5Testable testable = JUnit5Testable.fromClass(testClass, engineDescriptor.getUniqueId());
+		resolveTestable(testable);
 	}
 
-	private void resolveClassNameSpecification(String className) {
-		JUnit5Testable testable = JUnit5Testable.fromClassName(className, engineDescriptor.getUniqueId());
+	private void resolveMethodSpecification(Class<?> testClass, Method testMethod) {
+		JUnit5Testable testable = JUnit5Testable.fromMethod(testMethod, testClass, engineDescriptor.getUniqueId());
 		resolveTestable(testable);
 	}
 
 	private void resolveUniqueIdSpecification(String uniqueId) {
-
 		JUnit5Testable testable = JUnit5Testable.fromUniqueId(uniqueId, engineDescriptor.getUniqueId());
 		resolveTestable(testable);
 	}
@@ -89,7 +99,7 @@ public class SpecificationResolver {
 
 			@Override
 			public void visitMethod(String uniqueId, Method method, Class<?> container) {
-				resolveMethodTestable(method, container, uniqueId, engineDescriptor);
+				resolveMethodTestable(method, container, uniqueId);
 			}
 
 			@Override
@@ -103,8 +113,7 @@ public class SpecificationResolver {
 		resolveTestable(testable, true);
 	}
 
-	private void resolveMethodTestable(Method method, Class<?> testClass, String uniqueId,
-			AbstractTestDescriptor parentDescriptor) {
+	private void resolveMethodTestable(Method method, Class<?> testClass, String uniqueId) {
 		JUnit5Testable parentTestable = JUnit5Testable.fromClass(testClass, engineDescriptor.getUniqueId());
 		TestDescriptor newParentDescriptor = resolveAndReturnParentTestable(parentTestable);
 		MethodTestDescriptor descriptor = getOrCreateMethodDescriptor(method, uniqueId);
@@ -137,7 +146,11 @@ public class SpecificationResolver {
 
 	private TestDescriptor resolveAndReturnParentTestable(JUnit5Testable containerTestable) {
 		resolveTestable(containerTestable, false);
-		return descriptorByUniqueId(containerTestable.getUniqueId());
+		return descriptorByUniqueId(containerTestable.getUniqueId()).orElseThrow(() -> {
+			String errorMessage = String.format("Testable with unique id %s could not be resolved. Programming error!",
+				containerTestable.getUniqueId());
+			return new RuntimeException(errorMessage);
+		});
 	}
 
 	private void resolveContainedTestMethods(Class<?> testClass, AbstractTestDescriptor parentDescriptor) {
@@ -160,32 +173,20 @@ public class SpecificationResolver {
 	}
 
 	private MethodTestDescriptor getOrCreateMethodDescriptor(Method method, String uniqueId) {
-		MethodTestDescriptor methodTestDescriptor = (MethodTestDescriptor) descriptorByUniqueId(uniqueId);
-		if (methodTestDescriptor == null) {
-			methodTestDescriptor = new MethodTestDescriptor(uniqueId, method);
-		}
-		return methodTestDescriptor;
+		return (MethodTestDescriptor) descriptorByUniqueId(uniqueId).orElse(new MethodTestDescriptor(uniqueId, method));
 	}
 
 	private ContextTestDescriptor getOrCreateContextDescriptor(Class<?> clazz, String uniqueId) {
-		ContextTestDescriptor contextTestDescriptor = (ContextTestDescriptor) descriptorByUniqueId(uniqueId);
-		if (contextTestDescriptor == null) {
-			contextTestDescriptor = new ContextTestDescriptor(uniqueId, clazz);
-		}
-		return contextTestDescriptor;
+		return (ContextTestDescriptor) descriptorByUniqueId(uniqueId).orElse(
+			new ContextTestDescriptor(uniqueId, clazz));
 	}
 
 	private ClassTestDescriptor getOrCreateClassDescriptor(Class<?> clazz, String uniqueId) {
-		ClassTestDescriptor classTestDescriptor = (ClassTestDescriptor) descriptorByUniqueId(uniqueId);
-		if (classTestDescriptor == null) {
-			classTestDescriptor = new ClassTestDescriptor(uniqueId, clazz);
-		}
-		return classTestDescriptor;
+		return (ClassTestDescriptor) descriptorByUniqueId(uniqueId).orElse(new ClassTestDescriptor(uniqueId, clazz));
 	}
 
-	private TestDescriptor descriptorByUniqueId(String uniqueId) {
-		// TODO Users of this method should use Optional directly but I couldn't figure out how.
-		return engineDescriptor.findByUniqueId(uniqueId).orElse(null);
+	private Optional<TestDescriptor> descriptorByUniqueId(String uniqueId) {
+		return engineDescriptor.findByUniqueId(uniqueId);
 	}
 
 }

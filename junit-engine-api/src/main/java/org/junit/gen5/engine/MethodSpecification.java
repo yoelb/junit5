@@ -10,15 +10,23 @@
 
 package org.junit.gen5.engine;
 
+import java.lang.reflect.Method;
+
 import lombok.Value;
 
 @Value
-public class ClassNameSpecification implements TestPlanSpecificationElement {
+public class MethodSpecification implements TestPlanSpecificationElement {
 
-	private String className;
+	private Class<?> testClass;
+	private Method testMethod;
+
+	public MethodSpecification(Class<?> testClass, Method testMethod) {
+		this.testClass = testClass;
+		this.testMethod = testMethod;
+	}
 
 	@Override
 	public void accept(TestPlanSpecificationVisitor visitor) {
-		visitor.visitClassNameSpecification(className);
+		visitor.visitMethodSpecification(testClass, testMethod);
 	}
 }

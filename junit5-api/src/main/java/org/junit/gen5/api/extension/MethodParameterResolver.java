@@ -15,11 +15,13 @@ import java.lang.reflect.Parameter;
 import org.junit.gen5.commons.util.ReflectionUtils;
 
 /**
+ * <p>Implementations must provide a no-args constructor.
+ *
  * @author Matthias Merdes
  * @author Sam Brannen
  * @since 5.0
  */
-public interface MethodParameterResolver extends TestDecorator {
+public interface MethodParameterResolver extends TestExtension {
 
 	boolean supports(Parameter parameter);
 
