@@ -13,6 +13,7 @@ package org.junit.gen5.engine.junit5.execution;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.gen5.api.Condition.Result;
 import org.junit.gen5.api.extension.TestExecutionContext;
@@ -70,12 +71,25 @@ class MethodTestExecutionNode extends TestExecutionNode {
 				request.getTestExecutionListener().testAborted(getTestDescriptor(), mainException);
 			}
 			else {
+				this.logReport(context);
 				request.getTestExecutionListener().testFailed(getTestDescriptor(), mainException);
 			}
 		}
 		else {
+			this.logReport(context);
 			request.getTestExecutionListener().testSucceeded(getTestDescriptor());
 		}
+	}
+
+	private void logReport(TestExecutionContext context) {
+		Map<String, String> injectedParameterItems = context.getTestReportData().getInjectedParameterItems();
+
+		if (injectedParameterItems.size() == 0)
+			return;
+
+		System.out.println("---------------------------------------------------------------------------");
+		System.out.println(injectedParameterItems);
+		System.out.println("---------------------------------------------------------------------------");
 	}
 
 	protected Throwable wrapInCollectingException(List<Throwable> exceptionsCollector) {

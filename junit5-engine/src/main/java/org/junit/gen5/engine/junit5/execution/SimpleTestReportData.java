@@ -49,7 +49,7 @@ public class SimpleTestReportData implements TestReportData {
 
 	//no Serializable needed as intended solely for reporting and _not_ for rerunning tests - possible duplication here?
 	//we might want to preserve the order - map not ideal?
-	private Map<String, String> injectedParameterItems;
+	private Map<String, String> injectedParameterItems = new HashMap<String, String>();
 
 	//is this the right place?
 	private Set<String> tags;

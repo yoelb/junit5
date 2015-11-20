@@ -109,7 +109,8 @@ class MethodInvoker {
 			Object resolvedParameter) {
 		TestReportData testReportData = testExecutionContext.getTestReportData();
 
-		System.err.println("XXXXXXX " + resolvedParameter.toString());
+		if (resolvedParameter == null)
+			return;
 
 		testReportData.getInjectedParameterItems().put(parameter.getName(), resolvedParameter.toString());
 	}
