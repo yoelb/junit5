@@ -19,10 +19,11 @@ public class StandardTestClassTest extends AbstractJUnit5TestEngineTestCase {
 
 	@org.junit.Test
 	public void executeTestsForClass() {
-		TrackingTestExecutionListener listener = executeTestsForClass(MyStandardTestCase.class, 3);
+		TrackingTestExecutionListener listener = executeTestsForClass(MyStandardTestCase.class, 4);
 
-		Assert.assertEquals("# tests started", 2, listener.testStartedCount.get());
+		Assert.assertEquals("# tests started", 3, listener.testStartedCount.get());
 		Assert.assertEquals("# tests succeeded", 2, listener.testSucceededCount.get());
+		Assert.assertEquals("# tests failed", 1, listener.testFailedCount.get());
 	}
 
 }
@@ -37,6 +38,11 @@ class MyStandardTestCase {
 	@Test
 	void succeedingTest2() {
 		assertTrue(true);
+	}
+
+	@Test
+	void failingTest() {
+		fail("always fails");
 	}
 
 }

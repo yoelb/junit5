@@ -12,6 +12,7 @@ package org.junit.gen5.engine.junit5.execution;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.junit.gen5.api.Executable;
@@ -41,11 +42,18 @@ public class JUnit5EngineTaskTreeFactory {
 		return new TaskList(methodTasks);
 	}
 
-	private TestMethodTask createTestMethodTask(MethodTestDescriptor methodDescriptor,
-			ClassTestDescriptor classDescriptor, TestExecutionListener testExecutionListener) {
+	private Executable createTestMethodTask(MethodTestDescriptor methodDescriptor, ClassTestDescriptor classDescriptor,
+			TestExecutionListener testExecutionListener) {
+		MethodTask methodTask = createMethodTask(methodDescriptor, classDescriptor);
+		TestMethodTask testMethodTask = new TestMethodTask(methodTask, testExecutionListener, methodDescriptor);
+		Consumer<Throwable> exceptionHandler = exception -> testExecutionListener.testFailed(methodDescriptor,
+			exception);
+		return new FailureHandlingTask(testMethodTask, exceptionHandler);
+	}
+
+	private MethodTask createMethodTask(MethodTestDescriptor methodDescriptor, ClassTestDescriptor classDescriptor) {
 		Method testMethod = methodDescriptor.getTestMethod();
 		Object target = ReflectionUtils.newInstance(classDescriptor.getTestClass());
-		MethodTask methodTask = new MethodTask(testMethod, target);
-		return new TestMethodTask(methodTask, testExecutionListener, methodDescriptor);
+		return new MethodTask(testMethod, target);
 	}
 }
