@@ -10,6 +10,8 @@
 
 package org.junit.gen5.engine.junit5;
 
+import java.util.List;
+
 import org.junit.gen5.commons.util.Preconditions;
 import org.junit.gen5.engine.ClassFilter;
 import org.junit.gen5.engine.EngineDescriptor;
@@ -21,8 +23,6 @@ import org.junit.gen5.engine.TestPlanSpecification;
 import org.junit.gen5.engine.TestPlanSpecificationElement;
 import org.junit.gen5.engine.junit5.descriptor.ClassTestDescriptor;
 import org.junit.gen5.engine.junit5.descriptor.SpecificationResolver;
-
-import java.util.List;
 
 public class JUnit5TestEngine implements TestEngine {
 	@Override
