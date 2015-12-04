@@ -13,10 +13,19 @@ package org.junit.gen5.engine.junit5;
 import static org.junit.gen5.api.Assertions.*;
 
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.gen5.api.AfterEach;
 import org.junit.gen5.api.BeforeEach;
 import org.junit.gen5.api.Test;
 
 public class StandardTestClassTest extends AbstractJUnit5TestEngineTestCase {
+
+	@Before
+	public void init() {
+		MyStandardTestCase.countBefore1 = 0;
+		MyStandardTestCase.countBefore2 = 0;
+		MyStandardTestCase.countAfter = 0;
+	}
 
 	@org.junit.Test
 	public void allTestsInClassAreRunWithBeforeEach() {
@@ -28,6 +37,14 @@ public class StandardTestClassTest extends AbstractJUnit5TestEngineTestCase {
 
 		Assert.assertEquals("# before1 calls", 3, MyStandardTestCase.countBefore1);
 		Assert.assertEquals("# before2 calls", 3, MyStandardTestCase.countBefore2);
+	}
+
+	@org.junit.Test
+	public void allTestsInClassAreRunWithAfterEach() {
+		TrackingTestExecutionListener listener = executeTestsForClass(MyStandardTestCase.class, 4);
+
+		Assert.assertEquals("# tests started", 3, listener.testStartedCount.get());
+		Assert.assertEquals("# after each calls", 3, MyStandardTestCase.countAfter);
 	}
 
 	@org.junit.Test
@@ -47,6 +64,7 @@ class MyStandardTestCase {
 
 	static int countBefore1 = 0;
 	static int countBefore2 = 0;
+	static int countAfter = 0;
 
 	@BeforeEach
 	void before1() {
@@ -56,6 +74,11 @@ class MyStandardTestCase {
 	@BeforeEach
 	void before2() {
 		countBefore2++;
+	}
+
+	@AfterEach
+	void after() {
+		countAfter++;
 	}
 
 	@Test

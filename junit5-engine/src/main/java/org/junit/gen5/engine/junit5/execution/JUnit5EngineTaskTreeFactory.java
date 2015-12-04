@@ -13,9 +13,11 @@ package org.junit.gen5.engine.junit5.execution;
 import static java.util.stream.Collectors.toList;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.junit.gen5.api.AfterEach;
 import org.junit.gen5.api.BeforeEach;
 import org.junit.gen5.api.Executable;
 import org.junit.gen5.commons.util.AnnotationUtils;
@@ -47,26 +49,47 @@ public class JUnit5EngineTaskTreeFactory {
 
 	private Executable createTestMethodTask(MethodTestDescriptor methodDescriptor, ClassTestDescriptor classDescriptor,
 			TestExecutionListener testExecutionListener) {
-		Object testInstance = ReflectionUtils.newInstance(classDescriptor.getTestClass());
-		Method testMethod = methodDescriptor.getTestMethod();
-		MethodTask methodTask = createRawMethodTask(testMethod, testInstance);
-		List<Executable> beforeEachTaskList = createBeforeEachTaskList(classDescriptor, testInstance);
-		TaskList beforeTasks = new TaskList(beforeEachTaskList);
-		TestMethodTask testMethodTask = new TestMethodTask(methodTask, beforeTasks, testExecutionListener,
+
+		Object testInstance = createTestInstance(classDescriptor);
+		Executable beforeEachTasks = createBeforeEachTasks(classDescriptor, testInstance);
+		Executable testAndAfterEachTasks = createTestAndAfterEachTask(methodDescriptor, classDescriptor, testInstance);
+
+		Executable testMethodTask = new TestMethodTask(beforeEachTasks, testAndAfterEachTasks, testExecutionListener,
 			methodDescriptor);
 		Consumer<Throwable> exceptionHandler = exception -> testExecutionListener.testFailed(methodDescriptor,
 			exception);
 		return new FailureHandlingTask(testMethodTask, exceptionHandler);
 	}
 
-	private MethodTask createRawMethodTask(Method rawMethod, Object target) {
-		return new MethodTask(rawMethod, target);
+	private Executable createTestAndAfterEachTask(MethodTestDescriptor methodDescriptor,
+			ClassTestDescriptor classDescriptor, Object testInstance) {
+		Executable methodTask = createRawMethodTask(methodDescriptor.getTestMethod(), testInstance);
+		List<Executable> testAndAfterEach = new ArrayList<>();
+		testAndAfterEach.add(methodTask);
+		testAndAfterEach.addAll(createAfterEachTasks(classDescriptor, testInstance));
+		return new ExceptionCollectingTaskList(testAndAfterEach);
 	}
 
-	private List<Executable> createBeforeEachTaskList(ClassTestDescriptor classDescriptor, Object target) {
+	private Object createTestInstance(ClassTestDescriptor classDescriptor) {
+		return ReflectionUtils.newInstance(classDescriptor.getTestClass());
+	}
+
+	private TaskList createBeforeEachTasks(ClassTestDescriptor classDescriptor, Object testInstance) {
 		List<Method> beforeEaches = AnnotationUtils.findAnnotatedMethods(classDescriptor.getTestClass(),
 			BeforeEach.class, ReflectionUtils.MethodSortOrder.HierarchyDown);
-		return beforeEaches.stream().map(method -> createRawMethodTask(method, target)).collect(toList());
+		List<Executable> beforeEachTaskList = beforeEaches.stream().map(
+			method -> createRawMethodTask(method, testInstance)).collect(toList());
+		return new TaskList(beforeEachTaskList);
+	}
+
+	private List<Executable> createAfterEachTasks(ClassTestDescriptor classDescriptor, Object testInstance) {
+		List<Method> beforeEaches = AnnotationUtils.findAnnotatedMethods(classDescriptor.getTestClass(),
+			AfterEach.class, ReflectionUtils.MethodSortOrder.HierarchyUp);
+		return beforeEaches.stream().map(method -> createRawMethodTask(method, testInstance)).collect(toList());
+	}
+
+	private Executable createRawMethodTask(Method rawMethod, Object target) {
+		return new MethodTask(rawMethod, target);
 	}
 
 }
