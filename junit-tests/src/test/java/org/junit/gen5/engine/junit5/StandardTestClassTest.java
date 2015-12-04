@@ -58,6 +58,17 @@ public class StandardTestClassTest extends AbstractJUnit5TestEngineTestCase {
 		Assert.assertEquals("# before each calls", 2, TestCaseWithFailingBefore.countBefore);
 	}
 
+	@org.junit.Test
+	public void testsFailWhenAfterEachFails() {
+		TrackingTestExecutionListener listener = executeTestsForClass(TestCaseWithFailingAfter.class, 2);
+
+		Assert.assertEquals("# tests started", 1, listener.testStartedCount.get());
+		Assert.assertEquals("# tests succeeded", 0, listener.testSucceededCount.get());
+		Assert.assertEquals("# tests failed", 1, listener.testFailedCount.get());
+
+		Assert.assertTrue("test executed?", TestCaseWithFailingAfter.testExecuted);
+	}
+
 }
 
 class MyStandardTestCase {
@@ -114,6 +125,22 @@ class TestCaseWithFailingBefore {
 
 	@Test
 	void test2() {
+	}
+
+}
+
+class TestCaseWithFailingAfter {
+
+	static boolean testExecuted = false;
+
+	@AfterEach
+	void after() {
+		throw new RuntimeException("Problem during setup");
+	}
+
+	@Test
+	void test1() {
+		testExecuted = true;
 	}
 
 }
