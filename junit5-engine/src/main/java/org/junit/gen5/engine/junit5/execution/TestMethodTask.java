@@ -16,13 +16,15 @@ import org.junit.gen5.engine.TestExecutionListener;
 
 public class TestMethodTask implements Executable {
 
-	private final MethodTask methodTask;
+	private final MethodTask testMethod;
+	private final TaskList beforeEachTasks;
 	private final TestExecutionListener testExecutionListener;
 	private final TestDescriptor testDescriptor;
 
-	public TestMethodTask(MethodTask methodTask, TestExecutionListener testExecutionListener,
+	public TestMethodTask(MethodTask testMethod, TaskList beforeEachTasks, TestExecutionListener testExecutionListener,
 			TestDescriptor testDescriptor) {
-		this.methodTask = methodTask;
+		this.testMethod = testMethod;
+		this.beforeEachTasks = beforeEachTasks;
 		this.testExecutionListener = testExecutionListener;
 		this.testDescriptor = testDescriptor;
 	}
@@ -30,7 +32,8 @@ public class TestMethodTask implements Executable {
 	@Override
 	public void execute() throws Throwable {
 		this.testExecutionListener.testStarted(this.testDescriptor);
-		this.methodTask.execute();
+		this.beforeEachTasks.execute();
+		this.testMethod.execute();
 		this.testExecutionListener.testSucceeded(this.testDescriptor);
 	}
 

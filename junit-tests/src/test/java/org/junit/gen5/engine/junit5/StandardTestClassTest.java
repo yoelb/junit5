@@ -13,6 +13,7 @@ package org.junit.gen5.engine.junit5;
 import static org.junit.gen5.api.Assertions.*;
 
 import org.junit.Assert;
+import org.junit.gen5.api.BeforeEach;
 import org.junit.gen5.api.Test;
 
 public class StandardTestClassTest extends AbstractJUnit5TestEngineTestCase {
@@ -24,11 +25,20 @@ public class StandardTestClassTest extends AbstractJUnit5TestEngineTestCase {
 		Assert.assertEquals("# tests started", 3, listener.testStartedCount.get());
 		Assert.assertEquals("# tests succeeded", 2, listener.testSucceededCount.get());
 		Assert.assertEquals("# tests failed", 1, listener.testFailedCount.get());
+
+		Assert.assertEquals("# before each calls", 3, MyStandardTestCase.countBefore);
 	}
 
 }
 
 class MyStandardTestCase {
+
+	static int countBefore = 0;
+
+	@BeforeEach
+	void before() {
+		countBefore++;
+	}
 
 	@Test
 	void succeedingTest1() {
