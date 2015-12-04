@@ -38,6 +38,15 @@ public abstract class AbstractTestDescriptor implements MutableTestDescriptor {
 		this.uniqueId = uniqueId;
 	}
 
+	public Set<MutableTestDescriptor> allChildren() {
+		Set<MutableTestDescriptor> all = new HashSet<>();
+		all.addAll(this.children);
+		for (MutableTestDescriptor child : this.children) {
+			all.addAll(((AbstractTestDescriptor) child).allChildren());
+		}
+		return all;
+	}
+
 	@Override
 	public final String getUniqueId() {
 		return this.uniqueId;
