@@ -17,11 +17,12 @@ import org.junit.gen5.engine.JavaSource;
 import org.junit.gen5.engine.TestDescriptor;
 import org.junit.gen5.engine.TestTag;
 import org.junit.gen5.engine.junit5.TaskFactory;
+import org.junit.gen5.engine.junit5.execution.TestClassTaskFactory;
 
 /**
  * {@link TestDescriptor} for tests based on Java classes.
- *
- * <p>The pattern of the {@link #getUniqueId unique ID} takes the form of
+ * <p>
+ * The pattern of the {@link #getUniqueId unique ID} takes the form of
  * <code>{parent unique id}:{fully qualified class name}</code>.
  *
  * @since 5.0
@@ -64,6 +65,6 @@ public class ClassTestDescriptor extends JUnit5TestDescriptor {
 
 	@Override
 	public TaskFactory getTaskFactory() {
-		return null;
+		return new TestClassTaskFactory(this);
 	}
 }
