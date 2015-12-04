@@ -10,18 +10,10 @@
 
 package org.junit.gen5.engine.junit5.descriptor;
 
-import org.junit.gen5.engine.junit5.TaskFactory;
-import org.junit.gen5.engine.junit5.execution.JUnit5EngineTaskFactory;
-
 public class JUnit5EngineDescriptor extends JUnit5TestDescriptor {
 
 	public JUnit5EngineDescriptor(String uniqueId) {
 		super(uniqueId);
-	}
-
-	@Override
-	public TaskFactory getTaskFactory() {
-		return new JUnit5EngineTaskFactory(this);
 	}
 
 	@Override

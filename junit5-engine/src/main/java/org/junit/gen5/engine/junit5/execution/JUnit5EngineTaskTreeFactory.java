@@ -10,22 +10,28 @@
 
 package org.junit.gen5.engine.junit5.execution;
 
+import java.lang.reflect.Method;
+
 import org.junit.gen5.api.Executable;
+import org.junit.gen5.commons.util.ReflectionUtils;
 import org.junit.gen5.engine.TestExecutionListener;
-import org.junit.gen5.engine.junit5.TaskFactory;
 import org.junit.gen5.engine.junit5.descriptor.ClassTestDescriptor;
 import org.junit.gen5.engine.junit5.descriptor.JUnit5EngineDescriptor;
+import org.junit.gen5.engine.junit5.descriptor.MethodTestDescriptor;
 
-public class JUnit5EngineTaskFactory implements TaskFactory {
+public class JUnit5EngineTaskTreeFactory {
 	private final JUnit5EngineDescriptor jUnit5EngineDescriptor;
 
-	public JUnit5EngineTaskFactory(JUnit5EngineDescriptor jUnit5EngineDescriptor) {
+	public JUnit5EngineTaskTreeFactory(JUnit5EngineDescriptor jUnit5EngineDescriptor) {
 		this.jUnit5EngineDescriptor = jUnit5EngineDescriptor;
 	}
 
-	@Override
-	public Executable createWith(TestExecutionListener testExecutionListener) {
+	public Executable createTaskTree(TestExecutionListener testExecutionListener) {
 		ClassTestDescriptor classDescriptor = (ClassTestDescriptor) jUnit5EngineDescriptor.getChildren().iterator().next();
-		return classDescriptor.getTaskFactory().createWith(testExecutionListener);
+		MethodTestDescriptor methodDescriptor = (MethodTestDescriptor) classDescriptor.getChildren().iterator().next();
+		Method testMethod = methodDescriptor.getTestMethod();
+		Object target = ReflectionUtils.newInstance(classDescriptor.getTestClass());
+		MethodTask methodTask = new MethodTask(testMethod, target);
+		return new TestMethodTask(methodTask, testExecutionListener, methodDescriptor);
 	}
 }
