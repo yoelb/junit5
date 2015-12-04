@@ -24,9 +24,8 @@ import org.junit.gen5.engine.TestPlanSpecification;
 import org.junit.gen5.engine.TestPlanSpecificationElement;
 import org.junit.gen5.engine.junit5.descriptor.ClassTestDescriptor;
 import org.junit.gen5.engine.junit5.descriptor.JUnit5EngineDescriptor;
-import org.junit.gen5.engine.junit5.descriptor.JUnit5TestDescriptor;
 import org.junit.gen5.engine.junit5.descriptor.SpecificationResolver;
-import org.junit.gen5.engine.junit5.execution.JUnit5EngineTaskTreeFactory;
+import org.junit.gen5.engine.junit5.execution.JUnit5EngineTaskTreeBuilder;
 
 public class JUnit5TestEngine implements TestEngine {
 	@Override
@@ -75,7 +74,7 @@ public class JUnit5TestEngine implements TestEngine {
 		//TODO: check explicitly
 		JUnit5EngineDescriptor rootTestDescriptor = (JUnit5EngineDescriptor) request.getRootTestDescriptor();
 
-		Executable rootExecutable = new JUnit5EngineTaskTreeFactory(rootTestDescriptor).createTaskTree(
+		Executable rootExecutable = new JUnit5EngineTaskTreeBuilder(rootTestDescriptor).buildTaskTree(
 			testExecutionListener);
 		try {
 			rootExecutable.execute();

@@ -27,14 +27,14 @@ import org.junit.gen5.engine.junit5.descriptor.ClassTestDescriptor;
 import org.junit.gen5.engine.junit5.descriptor.JUnit5EngineDescriptor;
 import org.junit.gen5.engine.junit5.descriptor.MethodTestDescriptor;
 
-public class JUnit5EngineTaskTreeFactory {
+public class JUnit5EngineTaskTreeBuilder {
 	private final JUnit5EngineDescriptor jUnit5EngineDescriptor;
 
-	public JUnit5EngineTaskTreeFactory(JUnit5EngineDescriptor jUnit5EngineDescriptor) {
+	public JUnit5EngineTaskTreeBuilder(JUnit5EngineDescriptor jUnit5EngineDescriptor) {
 		this.jUnit5EngineDescriptor = jUnit5EngineDescriptor;
 	}
 
-	public Executable createTaskTree(TestExecutionListener testExecutionListener) {
+	public Executable buildTaskTree(TestExecutionListener testExecutionListener) {
 		ClassTestDescriptor classDescriptor = (ClassTestDescriptor) jUnit5EngineDescriptor.getChildren().iterator().next();
 
 		// @formatter:off
