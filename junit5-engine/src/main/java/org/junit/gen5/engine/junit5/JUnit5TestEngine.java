@@ -75,7 +75,8 @@ public class JUnit5TestEngine implements TestEngine {
 		//TODO: check explicitly
 		JUnit5EngineDescriptor rootTestDescriptor = (JUnit5EngineDescriptor) request.getRootTestDescriptor();
 
-		Executable rootExecutable = new JUnit5EngineTaskTreeFactory(rootTestDescriptor).createTaskTree(testExecutionListener);
+		Executable rootExecutable = new JUnit5EngineTaskTreeFactory(rootTestDescriptor).createTaskTree(
+			testExecutionListener);
 		try {
 			rootExecutable.execute();
 		}
