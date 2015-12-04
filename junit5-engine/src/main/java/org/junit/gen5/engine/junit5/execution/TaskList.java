@@ -24,16 +24,9 @@ public class TaskList implements Executable {
 
 	@Override
 	public void execute() throws Throwable {
-
-		this.children.stream().forEach(executable -> {
-			try {
-				executable.execute();
-			}
-			catch (Throwable throwable) {
-				throwable.printStackTrace();
-			}
-		});
-
+		for (Executable child : this.children) {
+			child.execute();
+		}
 	}
 
 }

@@ -19,7 +19,7 @@ import org.junit.gen5.api.Test;
 public class StandardTestClassTest extends AbstractJUnit5TestEngineTestCase {
 
 	@org.junit.Test
-	public void executeTestsForClass() {
+	public void allTestsInClassAreRunWithBeforeEach() {
 		TrackingTestExecutionListener listener = executeTestsForClass(MyStandardTestCase.class, 4);
 
 		Assert.assertEquals("# tests started", 3, listener.testStartedCount.get());
@@ -27,6 +27,17 @@ public class StandardTestClassTest extends AbstractJUnit5TestEngineTestCase {
 		Assert.assertEquals("# tests failed", 1, listener.testFailedCount.get());
 
 		Assert.assertEquals("# before each calls", 3, MyStandardTestCase.countBefore);
+	}
+
+	@org.junit.Test
+	public void testsFailWhenBeforeEachFails() {
+		TrackingTestExecutionListener listener = executeTestsForClass(TestCaseWithFailingBefore.class, 3);
+
+		Assert.assertEquals("# tests started", 2, listener.testStartedCount.get());
+		Assert.assertEquals("# tests succeeded", 0, listener.testSucceededCount.get());
+		Assert.assertEquals("# tests failed", 2, listener.testFailedCount.get());
+
+		Assert.assertEquals("# before each calls", 2, TestCaseWithFailingBefore.countBefore);
 	}
 
 }
@@ -53,6 +64,26 @@ class MyStandardTestCase {
 	@Test
 	void failingTest() {
 		fail("always fails");
+	}
+
+}
+
+class TestCaseWithFailingBefore {
+
+	static int countBefore = 0;
+
+	@BeforeEach
+	void before() {
+		countBefore++;
+		throw new RuntimeException("Problem during setup");
+	}
+
+	@Test
+	void test1() {
+	}
+
+	@Test
+	void test2() {
 	}
 
 }
