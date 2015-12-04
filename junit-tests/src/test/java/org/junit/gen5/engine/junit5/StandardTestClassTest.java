@@ -26,7 +26,8 @@ public class StandardTestClassTest extends AbstractJUnit5TestEngineTestCase {
 		Assert.assertEquals("# tests succeeded", 2, listener.testSucceededCount.get());
 		Assert.assertEquals("# tests failed", 1, listener.testFailedCount.get());
 
-		Assert.assertEquals("# before each calls", 3, MyStandardTestCase.countBefore);
+		Assert.assertEquals("# before1 calls", 3, MyStandardTestCase.countBefore1);
+		Assert.assertEquals("# before2 calls", 3, MyStandardTestCase.countBefore2);
 	}
 
 	@org.junit.Test
@@ -44,11 +45,17 @@ public class StandardTestClassTest extends AbstractJUnit5TestEngineTestCase {
 
 class MyStandardTestCase {
 
-	static int countBefore = 0;
+	static int countBefore1 = 0;
+	static int countBefore2 = 0;
 
 	@BeforeEach
-	void before() {
-		countBefore++;
+	void before1() {
+		countBefore1++;
+	}
+
+	@BeforeEach
+	void before2() {
+		countBefore2++;
 	}
 
 	@Test
