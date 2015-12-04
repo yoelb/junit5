@@ -11,6 +11,8 @@
 package org.junit.gen5.engine.junit5.execution;
 
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.gen5.api.Executable;
 import org.junit.gen5.commons.util.ReflectionUtils;
@@ -28,7 +30,19 @@ public class JUnit5EngineTaskTreeFactory {
 
 	public Executable createTaskTree(TestExecutionListener testExecutionListener) {
 		ClassTestDescriptor classDescriptor = (ClassTestDescriptor) jUnit5EngineDescriptor.getChildren().iterator().next();
-		MethodTestDescriptor methodDescriptor = (MethodTestDescriptor) classDescriptor.getChildren().iterator().next();
+
+		// @formatter:off
+		List<Executable> methodTasks = classDescriptor.getChildren().stream()
+                .map(descriptor -> (MethodTestDescriptor) descriptor)
+                .map(methodDescriptor -> createTestMethodTask(methodDescriptor, classDescriptor, testExecutionListener))
+                .collect(Collectors.toList());
+        // @formatter:on
+
+		return new TaskList(methodTasks);
+	}
+
+	private TestMethodTask createTestMethodTask(MethodTestDescriptor methodDescriptor,
+			ClassTestDescriptor classDescriptor, TestExecutionListener testExecutionListener) {
 		Method testMethod = methodDescriptor.getTestMethod();
 		Object target = ReflectionUtils.newInstance(classDescriptor.getTestClass());
 		MethodTask methodTask = new MethodTask(testMethod, target);
