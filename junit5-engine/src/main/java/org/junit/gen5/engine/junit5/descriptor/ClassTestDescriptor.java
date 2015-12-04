@@ -16,6 +16,7 @@ import org.junit.gen5.commons.util.Preconditions;
 import org.junit.gen5.engine.JavaSource;
 import org.junit.gen5.engine.TestDescriptor;
 import org.junit.gen5.engine.TestTag;
+import org.junit.gen5.engine.junit5.TaskFactory;
 
 /**
  * {@link TestDescriptor} for tests based on Java classes.
@@ -61,4 +62,8 @@ public class ClassTestDescriptor extends JUnit5TestDescriptor {
 		return false;
 	}
 
+	@Override
+	public TaskFactory getTaskFactory() {
+		return null;
+	}
 }

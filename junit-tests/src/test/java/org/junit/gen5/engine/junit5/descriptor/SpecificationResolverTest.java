@@ -29,7 +29,7 @@ import org.junit.gen5.engine.junit5.JUnit5TestEngine;
 
 public class SpecificationResolverTest {
 
-	private final EngineDescriptor engineDescriptor = new EngineDescriptor(new JUnit5TestEngine());
+	private final JUnit5EngineDescriptor engineDescriptor = new JUnit5EngineDescriptor(new JUnit5TestEngine().getId());
 	private SpecificationResolver resolver = new SpecificationResolver(engineDescriptor);
 
 	@org.junit.Test

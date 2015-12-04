@@ -10,9 +10,7 @@
 
 package org.junit.gen5.engine.junit5.descriptor;
 
-import static org.junit.gen5.commons.util.ReflectionUtils.findAllClassesInPackage;
-import static org.junit.gen5.commons.util.ReflectionUtils.findMethods;
-import static org.junit.gen5.commons.util.ReflectionUtils.findNestedClasses;
+import static org.junit.gen5.commons.util.ReflectionUtils.*;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -21,9 +19,7 @@ import java.util.Optional;
 
 import org.junit.gen5.commons.util.ReflectionUtils;
 import org.junit.gen5.engine.AbstractTestDescriptor;
-import org.junit.gen5.engine.EngineDescriptor;
 import org.junit.gen5.engine.MutableTestDescriptor;
-import org.junit.gen5.engine.TestDescriptor;
 import org.junit.gen5.engine.TestPlanSpecificationElement;
 import org.junit.gen5.engine.TestPlanSpecificationElementVisitor;
 import org.junit.gen5.engine.junit5.testers.IsNestedTestClass;
@@ -35,13 +31,13 @@ import org.junit.gen5.engine.junit5.testers.IsTestMethod;
  */
 public class SpecificationResolver {
 
-	private final EngineDescriptor engineDescriptor;
+	private final JUnit5EngineDescriptor engineDescriptor;
 
 	private final IsNestedTestClass isNestedTestClass = new IsNestedTestClass();
 	private final IsTestMethod isTestMethod = new IsTestMethod();
 	private final IsTestClassWithTests isTestClassWithTests = new IsTestClassWithTests();
 
-	public SpecificationResolver(EngineDescriptor engineDescriptor) {
+	public SpecificationResolver(JUnit5EngineDescriptor engineDescriptor) {
 		this.engineDescriptor = engineDescriptor;
 	}
 

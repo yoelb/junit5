@@ -23,11 +23,12 @@ import org.junit.gen5.api.Tag;
 import org.junit.gen5.commons.util.StringUtils;
 import org.junit.gen5.engine.AbstractTestDescriptor;
 import org.junit.gen5.engine.TestTag;
+import org.junit.gen5.engine.junit5.TaskFactory;
 
 /**
  * @since 5.0
  */
-abstract class JUnit5TestDescriptor extends AbstractTestDescriptor {
+public abstract class JUnit5TestDescriptor extends AbstractTestDescriptor {
 
 	protected JUnit5TestDescriptor(String uniqueId) {
 		super(uniqueId);
@@ -51,5 +52,7 @@ abstract class JUnit5TestDescriptor extends AbstractTestDescriptor {
 				.orElse(defaultName);
 		// @formatter:on
 	}
+
+	abstract public TaskFactory getTaskFactory();
 
 }
