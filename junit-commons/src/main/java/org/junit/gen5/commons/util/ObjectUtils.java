@@ -10,6 +10,8 @@
 
 package org.junit.gen5.commons.util;
 
+import java.util.Objects;
+
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
@@ -29,4 +31,8 @@ public final class ObjectUtils {
 		return stream(classes).map(Class::getName).collect(joining(", "));
 	}
 
+	public static void verifyNonNull(Object obj, String message) {
+		if (obj == null)
+			throw new IllegalArgumentException(message);
+	}
 }
