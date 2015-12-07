@@ -12,11 +12,14 @@ package org.junit.gen5.engine.junit5;
 
 import static org.junit.gen5.api.Assertions.*;
 
+import java.util.*;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.gen5.api.AfterEach;
 import org.junit.gen5.api.BeforeEach;
 import org.junit.gen5.api.Test;
+import org.junit.gen5.engine.*;
 
 public class StandardTestClassTest extends AbstractJUnit5TestEngineTestCase {
 
@@ -25,6 +28,24 @@ public class StandardTestClassTest extends AbstractJUnit5TestEngineTestCase {
 		MyStandardTestCase.countBefore1 = 0;
 		MyStandardTestCase.countBefore2 = 0;
 		MyStandardTestCase.countAfter = 0;
+	}
+
+	@org.junit.Test
+	public void moreThanOneTestClassIsExecuted() {
+
+		List<TestPlanSpecificationElement> specificationElements = TestPlanSpecification.forNames(
+			Arrays.asList("org.junit.gen5.engine.junit5.FirstOfTwoTestCases"
+		//		, "org.junit.gen5.engine.junit5.SecondOfTwoTestCases"
+		));
+		TestPlanSpecification testPlanSpecification = TestPlanSpecification.build(specificationElements);
+
+		//TODO: the second parameter is ignored - why?? -> fix!!
+		TrackingTestExecutionListener listener = executeTests(testPlanSpecification, 77777);
+
+		Assert.assertEquals("# tests started", 3, listener.testStartedCount.get());
+		Assert.assertEquals("# tests succeeded", 2, listener.testSucceededCount.get());
+		Assert.assertEquals("# tests failed", 1, listener.testFailedCount.get());
+
 	}
 
 	@org.junit.Test
@@ -105,6 +126,44 @@ class MyStandardTestCase {
 	@Test
 	void failingTest() {
 		fail("always fails");
+	}
+
+}
+
+class FirstOfTwoTestCases {
+
+	@Test
+	void succeedingTest1() {
+		assertTrue(true);
+	}
+
+	@Test
+	void succeedingTest2() {
+		assertTrue(true);
+	}
+
+	@Test
+	void failingTest() {
+		fail("always fails");
+	}
+
+}
+
+class SecondOfTwoTestCases {
+
+	@Test
+	void succeedingTest1() {
+		assertTrue(true);
+	}
+
+	@Test
+	void succeedingTest2() {
+		assertTrue(true);
+	}
+
+	@Test
+	void succeedingTest3() {
+		assertTrue(true);
 	}
 
 }

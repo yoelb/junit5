@@ -37,6 +37,12 @@ public class JUnit5EngineTaskTreeBuilder {
 	public Executable buildTaskTree(TestExecutionListener testExecutionListener) {
 		ClassTestDescriptor classDescriptor = (ClassTestDescriptor) jUnit5EngineDescriptor.getChildren().iterator().next();
 
+		return createTestClassTask(testExecutionListener, classDescriptor);
+
+	}
+
+	private Executable createTestClassTask(TestExecutionListener testExecutionListener,
+			ClassTestDescriptor classDescriptor) {
 		// @formatter:off
 		List<Executable> methodTasks = classDescriptor.getChildren().stream()
                 .map(descriptor -> (MethodTestDescriptor) descriptor)
@@ -44,7 +50,7 @@ public class JUnit5EngineTaskTreeBuilder {
                 .collect(toList());
         // @formatter:on
 
-		return new TaskList(methodTasks);
+		return new TestClassTask(new TaskList(methodTasks), testExecutionListener, classDescriptor);
 	}
 
 	private Executable createTestMethodTask(MethodTestDescriptor methodDescriptor, ClassTestDescriptor classDescriptor,
