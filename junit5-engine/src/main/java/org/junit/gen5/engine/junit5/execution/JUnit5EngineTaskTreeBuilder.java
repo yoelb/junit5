@@ -22,7 +22,7 @@ import org.junit.gen5.api.BeforeEach;
 import org.junit.gen5.api.Executable;
 import org.junit.gen5.commons.util.AnnotationUtils;
 import org.junit.gen5.commons.util.ReflectionUtils;
-import org.junit.gen5.engine.TestExecutionListener;
+import org.junit.gen5.engine.*;
 import org.junit.gen5.engine.junit5.descriptor.ClassTestDescriptor;
 import org.junit.gen5.engine.junit5.descriptor.JUnit5EngineDescriptor;
 import org.junit.gen5.engine.junit5.descriptor.MethodTestDescriptor;
@@ -35,10 +35,14 @@ public class JUnit5EngineTaskTreeBuilder {
 	}
 
 	public Executable buildTaskTree(TestExecutionListener testExecutionListener) {
-		ClassTestDescriptor classDescriptor = (ClassTestDescriptor) jUnit5EngineDescriptor.getChildren().iterator().next();
+		List<Executable> classTasks = new ArrayList<>();
 
-		return createTestClassTask(testExecutionListener, classDescriptor);
+		for (MutableTestDescriptor testDescriptor : jUnit5EngineDescriptor.getChildren()) {
+			ClassTestDescriptor classDescriptor = (ClassTestDescriptor) testDescriptor;
+			classTasks.add(this.createTestClassTask(testExecutionListener, classDescriptor));
+		}
 
+		return new TaskList(classTasks);
 	}
 
 	private Executable createTestClassTask(TestExecutionListener testExecutionListener,

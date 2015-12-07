@@ -33,17 +33,15 @@ public class StandardTestClassTest extends AbstractJUnit5TestEngineTestCase {
 	@org.junit.Test
 	public void moreThanOneTestClassIsExecuted() {
 
-		List<TestPlanSpecificationElement> specificationElements = TestPlanSpecification.forNames(
-			Arrays.asList("org.junit.gen5.engine.junit5.FirstOfTwoTestCases"
-		//		, "org.junit.gen5.engine.junit5.SecondOfTwoTestCases"
-		));
+		List<TestPlanSpecificationElement> specificationElements = TestPlanSpecification.forNames(Arrays.asList(
+			"org.junit.gen5.engine.junit5.FirstOfTwoTestCases", "org.junit.gen5.engine.junit5.SecondOfTwoTestCases"));
 		TestPlanSpecification testPlanSpecification = TestPlanSpecification.build(specificationElements);
 
 		//TODO: the second parameter is ignored - why?? -> fix!!
 		TrackingTestExecutionListener listener = executeTests(testPlanSpecification, 77777);
 
-		Assert.assertEquals("# tests started", 3, listener.testStartedCount.get());
-		Assert.assertEquals("# tests succeeded", 2, listener.testSucceededCount.get());
+		Assert.assertEquals("# tests started", 6, listener.testStartedCount.get());
+		Assert.assertEquals("# tests succeeded", 5, listener.testSucceededCount.get());
 		Assert.assertEquals("# tests failed", 1, listener.testFailedCount.get());
 
 	}
