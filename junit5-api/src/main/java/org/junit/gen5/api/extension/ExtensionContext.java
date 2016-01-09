@@ -13,6 +13,8 @@ package org.junit.gen5.api.extension;
 import java.lang.reflect.AnnotatedElement;
 import java.util.Optional;
 
+import org.junit.gen5.api.extension.Store.Scope;
+
 /**
  * {@code ExtensionContext} encapsulates the <em>context</em> in which
  * the current test or container is being executed.
@@ -57,4 +59,9 @@ public interface ExtensionContext {
 
 	Object removeAttribute(String key);
 
+	<T extends Object> Store<T> getStore(Class<T> type, String key, Scope scope);
+
+	default <T extends Object> Store<T> getStore(Class<T> type, String key) {
+		return getStore(type, key, Scope.DEFAULT);
+	}
 }

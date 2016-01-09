@@ -15,7 +15,8 @@ import java.lang.reflect.AnnotatedElement;
 import org.junit.gen5.api.extension.ContainerExtensionContext;
 import org.junit.gen5.api.extension.ExtensionContext;
 
-final class ClassBasedContainerExtensionContext extends AbstractExtensionContext implements ContainerExtensionContext {
+final class ClassBasedContainerExtensionContext extends InstanceAwareExtensionContext
+		implements ContainerExtensionContext {
 
 	private final ClassTestDescriptor testDescriptor;
 

@@ -16,7 +16,7 @@ import java.lang.reflect.Method;
 import org.junit.gen5.api.extension.ExtensionContext;
 import org.junit.gen5.api.extension.TestExtensionContext;
 
-final class MethodBasedTestExtensionContext extends AbstractExtensionContext implements TestExtensionContext {
+final class MethodBasedTestExtensionContext extends InstanceAwareExtensionContext implements TestExtensionContext {
 
 	private final MethodTestDescriptor testDescriptor;
 	private final Object testInstance;
