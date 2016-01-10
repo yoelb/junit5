@@ -15,8 +15,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.junit.gen5.api.extension.ExtensionContext;
-import org.junit.gen5.api.extension.Store;
-import org.junit.gen5.api.extension.Store.Scope;
 import org.junit.gen5.commons.util.Preconditions;
 
 abstract class InstanceAwareExtensionContext implements ExtensionContext {
@@ -25,10 +23,10 @@ abstract class InstanceAwareExtensionContext implements ExtensionContext {
 
 	private final ExtensionContext parent;
 
-	protected final Map<String, Store> stores = new HashMap<>();
 	private Object currentExtension = null;
+	private Map<Object, Store> stores = new HashMap<>();
 
-	InstanceAwareExtensionContext(ExtensionContext parent) {
+	protected InstanceAwareExtensionContext(ExtensionContext parent) {
 		this.parent = parent;
 	}
 
@@ -56,35 +54,57 @@ abstract class InstanceAwareExtensionContext implements ExtensionContext {
 	}
 
 	@Override
-	public <T> Store<T> getStore(Class<T> type, String key, Scope scope) {
-		Preconditions.notBlank(key, "A key is needed");
-		Preconditions.notNull(this.currentExtension, "The current extension must be set for stores to work.");
+	public void store(Object key, Object value, Visibility visibility) {
+		Preconditions.notNull(this.currentExtension, "current extension must be set");
 
-		Store<T> existingStore = stores.get(key);
-		if (existingStore == null) {
-			existingStore = new LocalStore<T>();
-			stores.put(key, existingStore);
+		if (stores.containsKey(key) && stores.get(key).visibility != visibility) {
+			String message = String.format("Key '%s' used with conflicting visibilities [%s, %s] in extension '%s'",
+				key.toString(), stores.get(key).visibility, visibility, currentExtension);
+			throw new RuntimeException(message);
 		}
 
-		return existingStore;
+		Store newStore = new Store(value, currentExtension, visibility);
+		stores.put(key, newStore);
+	}
+
+	@Override
+	public Object get(Object key) {
+		Preconditions.notNull(this.currentExtension, "current extension must be set");
+
+		if (stores.containsKey(key) && stores.get(key).extensionInstance == currentExtension) {
+			return stores.get(key).value;
+		}
+		else {
+			if (getInstanceAwareParent().isPresent()) {
+				return getInstanceAwareParent().get().get(key);
+			}
+		}
+		return null;
+	}
+
+	protected Optional<InstanceAwareExtensionContext> getInstanceAwareParent() {
+		if (parent != null && parent instanceof InstanceAwareExtensionContext) {
+			return Optional.of((InstanceAwareExtensionContext) parent);
+		}
+		else {
+			return Optional.empty();
+		}
 	}
 
 	public void setCurrentExtension(Object currentExtension) {
 		this.currentExtension = currentExtension;
+		getInstanceAwareParent().ifPresent(parent -> parent.setCurrentExtension(currentExtension));
 	}
 
-	private static class LocalStore<T> implements Store<T> {
+	private static class Store {
+		private final Object extensionInstance;
+		private final Visibility visibility;
+		private final Object value;
 
-		T value;
-
-		@Override
-		public T get() {
-			return value;
-		}
-
-		@Override
-		public void set(T value) {
+		private Store(Object value, Object extensionInstance, Visibility visibility) {
 			this.value = value;
+			this.extensionInstance = extensionInstance;
+			this.visibility = visibility;
 		}
 	}
 }

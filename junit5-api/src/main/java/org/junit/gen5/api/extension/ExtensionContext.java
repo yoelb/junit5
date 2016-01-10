@@ -13,14 +13,10 @@ package org.junit.gen5.api.extension;
 import java.lang.reflect.AnnotatedElement;
 import java.util.Optional;
 
-import org.junit.gen5.api.extension.Store.Scope;
-
 /**
- * {@code ExtensionContext} encapsulates the <em>context</em> in which
- * the current test or container is being executed.
+ * {@code ExtensionContext} encapsulates the <em>context</em> in which the current test or container is being executed.
  *
- * <p>{@link TestExtension TestExtensions} are provided an instance of
- * {@code ExtensionContext} to perform their work.
+ * <p>{@link TestExtension TestExtensions} are provided an instance of {@code ExtensionContext} to perform their work.
  *
  * @since 5.0
  */
@@ -59,9 +55,21 @@ public interface ExtensionContext {
 
 	Object removeAttribute(String key);
 
-	<T extends Object> Store<T> getStore(Class<T> type, String key, Scope scope);
+	//Storing methods:
 
-	default <T extends Object> Store<T> getStore(Class<T> type, String key) {
-		return getStore(type, key, Scope.DEFAULT);
+	Object get(Object key);
+
+	void store(Object key, Object value, Visibility visibility);
+
+	default void store(Object key, Object value) {
+		store(key, value, Visibility.DEFAULT);
 	}
+
+	enum Visibility {
+		DEFAULT, //visible only in this extension but inherited from ancestor extension contexts
+		EXTENSION, //visible only in this extension but visible in the full tree of extension contexts
+		LOCAL, //only visible in this extension and this extension context
+		GLOBAL //visible in all extensions on this level and in ancestor extension contexts
+	}
+
 }
