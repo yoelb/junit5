@@ -10,16 +10,6 @@
 
 package org.junit.gen5.engine.junit5.descriptor;
 
-import static org.junit.gen5.commons.util.AnnotationUtils.findAnnotatedMethods;
-import static org.junit.gen5.engine.junit5.descriptor.MethodInvocationContextFactory.methodInvocationContext;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-
 import org.junit.gen5.api.AfterAll;
 import org.junit.gen5.api.AfterEach;
 import org.junit.gen5.api.BeforeAll;
@@ -46,6 +36,16 @@ import org.junit.gen5.engine.junit5.execution.MethodInvoker;
 import org.junit.gen5.engine.junit5.execution.RegisteredExtensionPoint;
 import org.junit.gen5.engine.junit5.execution.TestExtensionRegistry;
 import org.junit.gen5.engine.junit5.execution.TestInstanceProvider;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+
+import static org.junit.gen5.commons.util.AnnotationUtils.findAnnotatedMethods;
+import static org.junit.gen5.engine.junit5.descriptor.MethodInvocationContextFactory.methodInvocationContext;
 
 /**
  * {@link TestDescriptor} for tests based on Java classes.
@@ -162,8 +162,12 @@ public class ClassTestDescriptor extends JUnit5TestDescriptor implements Contain
 			ContainerExtensionContext containerExtensionContext) throws Exception {
 
 		Consumer<RegisteredExtensionPoint<BeforeAllExtensionPoint>> applyBeforeEach = registeredExtensionPoint -> {
-			executeAndMaskThrowable(
-				() -> registeredExtensionPoint.getExtensionPoint().beforeAll(containerExtensionContext));
+			executeAndMaskThrowable(() -> {
+                //TODO: Should that be in a central place?
+				((InstanceAwareExtensionContext) containerExtensionContext).setCurrentExtension(
+					registeredExtensionPoint.getExtensionInstance());
+				registeredExtensionPoint.getExtensionPoint().beforeAll(containerExtensionContext);
+			});
 		};
 
 		newTestExtensionRegistry.stream(BeforeAllExtensionPoint.class,
