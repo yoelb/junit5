@@ -10,7 +10,8 @@
 
 package org.junit.gen5.engine.junit5;
 
-import static org.junit.gen5.engine.TestPlanSpecification.*;
+import static org.junit.gen5.engine.dsl.ClassTestPlanSpecificationElementBuilder.forClass;
+import static org.junit.gen5.engine.dsl.TestPlanSpecificationBuilder.testPlanSpecification;
 
 import org.junit.gen5.api.BeforeEach;
 import org.junit.gen5.engine.EngineDescriptor;
@@ -20,6 +21,7 @@ import org.junit.gen5.engine.ExecutionRequest;
 import org.junit.gen5.engine.TestDescriptor;
 import org.junit.gen5.engine.TestPlanSpecification;
 import org.junit.gen5.engine.TrackingEngineExecutionListener;
+import org.junit.gen5.engine.dsl.ClassTestPlanSpecificationElementBuilder;
 
 /**
  * Abstract base class for tests involving the {@link JUnit5TestEngine}.
@@ -43,7 +45,7 @@ abstract class AbstractJUnit5TestEngineTests {
 	}
 
 	protected void executeTestsForClass(Class<?> testClass) {
-		executeTests(build(forClass(testClass)));
+		executeTests(testPlanSpecification().withElements(forClass(testClass)).build());
 	}
 
 	protected void executeTests(TestPlanSpecification spec) {

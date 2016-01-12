@@ -12,7 +12,8 @@ package org.junit.gen5.engine.junit5;
 
 import static org.junit.gen5.api.Assertions.*;
 import static org.junit.gen5.commons.util.AnnotationUtils.findAnnotation;
-import static org.junit.gen5.engine.TestPlanSpecification.*;
+import static org.junit.gen5.engine.dsl.ClassTestPlanSpecificationElementBuilder.forClass;
+import static org.junit.gen5.engine.dsl.TestPlanSpecificationBuilder.testPlanSpecification;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -30,6 +31,7 @@ import org.junit.gen5.api.extension.ExtendWith;
 import org.junit.gen5.api.extension.TestExecutionCondition;
 import org.junit.gen5.api.extension.TestExtensionContext;
 import org.junit.gen5.engine.TestPlanSpecification;
+import org.junit.gen5.engine.dsl.ClassTestPlanSpecificationElementBuilder;
 
 /**
  * Integration tests that verify support for {@link Disabled @Disabled} and
@@ -55,7 +57,8 @@ public class DisabledTests extends AbstractJUnit5TestEngineTests {
 
 	@Test
 	public void executeTestsWithDisabledTestClass() {
-		TestPlanSpecification spec = build(forClass(DisabledTestClassTestCase.class));
+		TestPlanSpecification spec = testPlanSpecification().withElements(
+			forClass(DisabledTestClassTestCase.class)).build();
 		executeTests(spec);
 
 		assertEquals(1, tracker.containerSkippedCount.get(), "# container skipped");
@@ -64,7 +67,8 @@ public class DisabledTests extends AbstractJUnit5TestEngineTests {
 
 	@Test
 	public void executeTestsWithDisabledTestMethods() {
-		TestPlanSpecification spec = build(forClass(DisabledTestMethodsTestCase.class));
+		TestPlanSpecification spec = testPlanSpecification().withElements(
+			forClass(DisabledTestMethodsTestCase.class)).build();
 		executeTests(spec);
 
 		assertEquals(2, tracker.testStartedCount.get(), "# tests started");

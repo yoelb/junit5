@@ -12,12 +12,14 @@ package org.junit.gen5.engine.junit5;
 
 import static org.junit.gen5.api.Assertions.*;
 import static org.junit.gen5.api.Assumptions.assumeTrue;
-import static org.junit.gen5.engine.TestPlanSpecification.*;
+import static org.junit.gen5.engine.dsl.TestPlanSpecificationBuilder.testPlanSpecification;
+import static org.junit.gen5.engine.dsl.UniqueIdTestPlanSpecificationElementBuilder.forUniqueId;
 
 import org.junit.gen5.api.AfterEach;
 import org.junit.gen5.api.BeforeEach;
 import org.junit.gen5.api.Test;
 import org.junit.gen5.engine.TestPlanSpecification;
+import org.junit.gen5.engine.dsl.UniqueIdTestPlanSpecificationElementBuilder;
 
 /**
  * Testing execution in test case hierarchy {@link JUnit5TestEngine}.
@@ -54,8 +56,8 @@ public class TestCaseWithInheritanceTests extends AbstractJUnit5TestEngineTests 
 
 	@Test
 	public void executeSingleTest() {
-		TestPlanSpecification spec = build(forUniqueId(
-			"junit5:org.junit.gen5.engine.junit5.TestCaseWithInheritanceTests$LocalTestCase#alwaysPasses()"));
+		TestPlanSpecification spec = testPlanSpecification().withElements(forUniqueId(
+			"junit5:org.junit.gen5.engine.junit5.TestCaseWithInheritanceTests$LocalTestCase#alwaysPasses()")).build();
 
 		executeTests(spec);
 
@@ -68,8 +70,8 @@ public class TestCaseWithInheritanceTests extends AbstractJUnit5TestEngineTests 
 
 	@Test
 	public void executeTestDeclaredInSuperClass() {
-		TestPlanSpecification spec = build(forUniqueId(
-			"junit5:org.junit.gen5.engine.junit5.TestCaseWithInheritanceTests$LocalTestCase#superclassTest()"));
+		TestPlanSpecification spec = testPlanSpecification().withElements(forUniqueId(
+			"junit5:org.junit.gen5.engine.junit5.TestCaseWithInheritanceTests$LocalTestCase#superclassTest()")).build();
 
 		executeTests(spec);
 
@@ -88,8 +90,8 @@ public class TestCaseWithInheritanceTests extends AbstractJUnit5TestEngineTests 
 
 	@Test
 	public void executeTestWithExceptionThrownInAfterMethod() {
-		TestPlanSpecification spec = build(forUniqueId(
-			"junit5:org.junit.gen5.engine.junit5.TestCaseWithInheritanceTests$LocalTestCase#throwExceptionInAfterMethod()"));
+		TestPlanSpecification spec = testPlanSpecification().withElements(forUniqueId(
+			"junit5:org.junit.gen5.engine.junit5.TestCaseWithInheritanceTests$LocalTestCase#throwExceptionInAfterMethod()")).build();
 
 		executeTests(spec);
 
