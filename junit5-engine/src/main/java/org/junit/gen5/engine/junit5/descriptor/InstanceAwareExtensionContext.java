@@ -17,7 +17,7 @@ import java.util.Optional;
 import org.junit.gen5.api.extension.ExtensionContext;
 import org.junit.gen5.commons.util.Preconditions;
 
-abstract class InstanceAwareExtensionContext implements ExtensionContext {
+public abstract class InstanceAwareExtensionContext implements ExtensionContext {
 
 	private final Map<String, Object> attributes = new HashMap<>();
 

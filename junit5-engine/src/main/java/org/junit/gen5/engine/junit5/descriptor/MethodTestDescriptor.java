@@ -33,6 +33,7 @@ import org.junit.gen5.engine.junit5.execution.JUnit5EngineExecutionContext;
 import org.junit.gen5.engine.junit5.execution.MethodInvoker;
 import org.junit.gen5.engine.junit5.execution.RegisteredExtensionPoint;
 import org.junit.gen5.engine.junit5.execution.TestExtensionRegistry;
+import org.junit.gen5.engine.junit5.utils.ExtensionContextUtils;
 
 /**
  * {@link TestDescriptor} for tests based on Java methods.
@@ -146,8 +147,10 @@ public class MethodTestDescriptor extends JUnit5TestDescriptor implements Leaf<J
 			TestExtensionContext testExtensionContext) throws Exception {
 
 		Consumer<RegisteredExtensionPoint<InstancePostProcessor>> applyInstancePostProcessor = registeredExtensionPoint -> {
-			executeAndMaskThrowable(
-				() -> registeredExtensionPoint.getExtensionPoint().postProcessTestInstance(testExtensionContext));
+			executeAndMaskThrowable(() -> {
+				ExtensionContextUtils.setExtensionInstanceInContext(registeredExtensionPoint, testExtensionContext);
+				registeredExtensionPoint.getExtensionPoint().postProcessTestInstance(testExtensionContext);
+			});
 		};
 
 		testExtensionRegistry.stream(InstancePostProcessor.class,
@@ -158,8 +161,10 @@ public class MethodTestDescriptor extends JUnit5TestDescriptor implements Leaf<J
 			TestExtensionContext testExtensionContext) throws Exception {
 
 		Consumer<RegisteredExtensionPoint<BeforeEachExtensionPoint>> applyBeforeEach = registeredExtensionPoint -> {
-			executeAndMaskThrowable(
-				() -> registeredExtensionPoint.getExtensionPoint().beforeEach(testExtensionContext));
+			executeAndMaskThrowable(() -> {
+				ExtensionContextUtils.setExtensionInstanceInContext(registeredExtensionPoint, testExtensionContext);
+				registeredExtensionPoint.getExtensionPoint().beforeEach(testExtensionContext);
+			});
 		};
 
 		testExtensionRegistry.stream(BeforeEachExtensionPoint.class,
@@ -181,8 +186,10 @@ public class MethodTestDescriptor extends JUnit5TestDescriptor implements Leaf<J
 
 		testExtensionRegistry.stream(AfterEachExtensionPoint.class,
 			TestExtensionRegistry.ApplicationOrder.BACKWARD).forEach(registeredExtensionPoint -> {
-				throwableCollector.execute(
-					() -> registeredExtensionPoint.getExtensionPoint().afterEach(testExtensionContext));
+				throwableCollector.execute(() -> {
+					ExtensionContextUtils.setExtensionInstanceInContext(registeredExtensionPoint, testExtensionContext);
+					registeredExtensionPoint.getExtensionPoint().afterEach(testExtensionContext);
+				});
 			});
 	}
 

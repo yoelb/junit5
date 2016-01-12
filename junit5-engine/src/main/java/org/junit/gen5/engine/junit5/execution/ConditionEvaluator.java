@@ -15,6 +15,7 @@ import org.junit.gen5.api.extension.ContainerExecutionCondition;
 import org.junit.gen5.api.extension.ContainerExtensionContext;
 import org.junit.gen5.api.extension.TestExecutionCondition;
 import org.junit.gen5.api.extension.TestExtensionContext;
+import org.junit.gen5.engine.junit5.utils.ExtensionContextUtils;
 
 /**
  * {@code ConditionEvaluator} evaluates {@link ContainerExecutionCondition}
@@ -42,8 +43,11 @@ public class ConditionEvaluator {
 			ContainerExtensionContext context) {
 		// @formatter:off
 		return extensionRegistry.stream(ContainerExecutionCondition.class, TestExtensionRegistry.ApplicationOrder.FORWARD)
-				.map(extensionPoint -> extensionPoint.getExtensionPoint())
-				.map(condition -> evaluate(condition, context))
+				.map(registeredExtensionPoint -> {
+                    ContainerExecutionCondition condition = registeredExtensionPoint.getExtensionPoint();
+                    ExtensionContextUtils.setExtensionInstanceInContext(registeredExtensionPoint, context);
+                    return evaluate(condition, context);
+                })
 				.filter(ConditionEvaluationResult::isDisabled)
 				.findFirst()
 				.orElse(ENABLED);
@@ -63,8 +67,11 @@ public class ConditionEvaluator {
 			TestExtensionContext context) {
 		// @formatter:off
 		return extensionRegistry.stream(TestExecutionCondition.class, TestExtensionRegistry.ApplicationOrder.FORWARD)
-				.map(extensionPoint -> extensionPoint.getExtensionPoint())
-				.map(condition -> evaluate(condition, context))
+                .map(registeredExtensionPoint -> {
+                    TestExecutionCondition condition = registeredExtensionPoint.getExtensionPoint();
+                    ExtensionContextUtils.setExtensionInstanceInContext(registeredExtensionPoint, context);
+                    return evaluate(condition, context);
+                })
 				.filter(ConditionEvaluationResult::isDisabled)
 				.findFirst()
 				.orElse(ENABLED);
