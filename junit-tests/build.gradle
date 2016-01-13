@@ -9,7 +9,7 @@ junit5 {
 	matchClassName '.*Test[s]'
 	reportFile file('build/test-results/JUNIT5-Tests.xml')
 	// includeTag 'fast'
-	// excludeTag 'slow'
+	excludeTag 'slow'
 }
 
 def testedProjects = [
