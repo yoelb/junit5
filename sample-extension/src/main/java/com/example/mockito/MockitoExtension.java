@@ -20,8 +20,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.lang.reflect.Parameter;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.mockito.Mockito.mock;
 
@@ -35,8 +33,6 @@ import static org.mockito.Mockito.mock;
  * @since 5.0
  */
 public class MockitoExtension implements InstancePostProcessor, MethodParameterResolver {
-
-	private final Map<Class<?>, Object> mocks = new ConcurrentHashMap<>();
 
 	@Override
 	public void postProcessTestInstance(TestExtensionContext context) {
@@ -54,18 +50,16 @@ public class MockitoExtension implements InstancePostProcessor, MethodParameterR
 	public Object resolve(Parameter parameter, MethodInvocationContext methodInvocationContext,
 			ExtensionContext extensionContext) throws ParameterResolutionException {
 
-        Class<?> type = parameter.getType();
+        return getMock(extensionContext, parameter.getType());
+	}
+
+    private Object getMock(ExtensionContext extensionContext, Class<?> type) {
         Object mock = extensionContext.get(type);
         if (mock == null) {
             mock = mock(type);
             extensionContext.store(type, mock);
         }
         return mock;
-//		return getMock(parameter.getType());
-	}
-
-	private Object getMock(Class<?> mockType) {
-		return this.mocks.computeIfAbsent(mockType, type -> mock(type));
-	}
+    }
 
 }
