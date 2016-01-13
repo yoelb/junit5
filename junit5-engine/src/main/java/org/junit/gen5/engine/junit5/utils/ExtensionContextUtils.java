@@ -20,7 +20,7 @@ public class ExtensionContextUtils {
 	public static void setExtensionInstanceInContext(
 			RegisteredExtensionPoint<? extends ExtensionPoint> registeredExtensionPoint,
 			ExtensionContext extensionContext) {
-		if (extensionContext instanceof ExtensionPoint)
+		if (extensionContext instanceof InstanceAwareExtensionContext)
 			((InstanceAwareExtensionContext) extensionContext).setCurrentExtension(
 				registeredExtensionPoint.getExtensionInstance());
 	}

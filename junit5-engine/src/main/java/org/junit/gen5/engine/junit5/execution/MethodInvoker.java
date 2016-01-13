@@ -10,13 +10,6 @@
 
 package org.junit.gen5.engine.junit5.execution;
 
-import static java.util.stream.Collectors.joining;
-
-import java.lang.reflect.Parameter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.gen5.api.extension.ExtensionContext;
 import org.junit.gen5.api.extension.MethodInvocationContext;
 import org.junit.gen5.api.extension.MethodParameterResolver;
@@ -24,6 +17,13 @@ import org.junit.gen5.api.extension.ParameterResolutionException;
 import org.junit.gen5.commons.util.ReflectionUtils;
 import org.junit.gen5.engine.junit5.execution.TestExtensionRegistry.ApplicationOrder;
 import org.junit.gen5.engine.junit5.utils.ExtensionContextUtils;
+
+import java.lang.reflect.Parameter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static java.util.stream.Collectors.joining;
 
 /**
  * {@code MethodInvoker} encapsulates the invocation of a method, including
@@ -67,13 +67,13 @@ public class MethodInvoker {
 			throws ParameterResolutionException {
 
 		try {
-			final List<MethodParameterResolver> matchingResolvers = new ArrayList<>();
+			final List<RegisteredExtensionPoint<MethodParameterResolver>> matchingResolvers = new ArrayList<>();
 			extensionRegistry.stream(MethodParameterResolver.class, ApplicationOrder.FORWARD).forEach(
 				registeredExtensionPoint -> {
 					ExtensionContextUtils.setExtensionInstanceInContext(registeredExtensionPoint, extensionContext);
 					if (registeredExtensionPoint.getExtensionPoint().supports(parameter, methodInvocationContext,
 						extensionContext))
-						matchingResolvers.add(registeredExtensionPoint.getExtensionPoint());
+						matchingResolvers.add(registeredExtensionPoint);
 				});
 
 			if (matchingResolvers.size() == 0) {
@@ -91,7 +91,9 @@ public class MethodInvoker {
 					"Discovered multiple competing MethodParameterResolvers for parameter [%s] in method [%s]: %s",
 					parameter, methodInvocationContext.getMethod().toGenericString(), resolverNames));
 			}
-			return matchingResolvers.get(0).resolve(parameter, methodInvocationContext, extensionContext);
+            RegisteredExtensionPoint<MethodParameterResolver> registeredParameterResolver = matchingResolvers.get(0);
+            ExtensionContextUtils.setExtensionInstanceInContext(registeredParameterResolver, extensionContext);
+            return registeredParameterResolver.getExtensionPoint().resolve(parameter, methodInvocationContext, extensionContext);
 		}
 		catch (Throwable ex) {
 			if (ex instanceof ParameterResolutionException) {
