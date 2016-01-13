@@ -72,6 +72,14 @@ public class ExtensionContextStoringTests {
 			parentContext.setCurrentExtension(currentExtension);
 			assertEquals("a value", parentContext.get("a key"));
 		}
+
+		@Test
+		void getWithDefaultWillStoreTheValue() {
+			String value = (String) parentContext.getWithDefault("a key", key -> "a value for " + key);
+
+			assertEquals("a value for a key", value);
+			assertEquals("a value for a key", parentContext.get("a key"));
+		}
 	}
 
 	@Test

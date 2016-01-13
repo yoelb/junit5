@@ -12,6 +12,7 @@ package org.junit.gen5.api.extension;
 
 import java.lang.reflect.AnnotatedElement;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * {@code ExtensionContext} encapsulates the <em>context</em> in which the current test or container is being executed.
@@ -63,6 +64,19 @@ public interface ExtensionContext {
 
 	default void store(Object key, Object value) {
 		store(key, value, Visibility.DEFAULT);
+	}
+
+	default Object getWithDefault(Object key, Function<Object, Object> defaultProvider, Visibility visibility) {
+		Object value = get(key);
+		if (value == null) {
+			value = defaultProvider.apply(key);
+			store(key, value, visibility);
+		}
+		return value;
+	}
+
+	default Object getWithDefault(Object key, Function<Object, Object> defaultProvider) {
+		return getWithDefault(key, defaultProvider, Visibility.DEFAULT);
 	}
 
 	enum Visibility {
