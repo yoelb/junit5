@@ -57,9 +57,9 @@ public abstract class InstanceAwareExtensionContext implements ExtensionContext 
 	public void store(Object key, Object value, Visibility visibility) {
 		Preconditions.notNull(this.currentExtension, "current extension must be set");
 
-		if (stores.containsKey(key) && stores.get(key).visibility != visibility) {
+		if (stores.containsKey(key) && getStore(key).visibility != visibility) {
 			String message = String.format("Key '%s' used with conflicting visibilities [%s, %s] in extension '%s'",
-				key.toString(), stores.get(key).visibility, visibility, currentExtension);
+				key.toString(), getStore(key).visibility, visibility, currentExtension);
 			throw new RuntimeException(message);
 		}
 
@@ -71,15 +71,23 @@ public abstract class InstanceAwareExtensionContext implements ExtensionContext 
 	public Object get(Object key) {
 		Preconditions.notNull(this.currentExtension, "current extension must be set");
 
-		if (stores.containsKey(key) && stores.get(key).extensionInstance == currentExtension) {
-			return stores.get(key).value;
+		if (stores.containsKey(key) && getStore(key).extensionInstance == currentExtension) {
+			return getStore(key).value;
 		}
 		else {
 			if (getInstanceAwareParent().isPresent()) {
-				return getInstanceAwareParent().get().get(key);
+				Store parentStore = getInstanceAwareParent().get().getStore(key);
+				if (parentStore.visibility != Visibility.LOCAL)
+					return getInstanceAwareParent().get().getStore(key).value;
+				else
+					return null;
 			}
 		}
 		return null;
+	}
+
+	private Store getStore(Object key) {
+		return stores.get(key);
 	}
 
 	protected Optional<InstanceAwareExtensionContext> getInstanceAwareParent() {

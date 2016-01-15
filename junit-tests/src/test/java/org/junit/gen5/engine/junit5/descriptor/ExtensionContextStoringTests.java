@@ -15,7 +15,7 @@ import static org.junit.gen5.api.Assertions.*;
 import org.junit.gen5.api.BeforeEach;
 import org.junit.gen5.api.Nested;
 import org.junit.gen5.api.Test;
-import org.junit.gen5.api.extension.ExtensionContext;
+import org.junit.gen5.api.extension.ExtensionContext.Visibility;
 import org.junit.gen5.engine.TestDescriptor;
 import org.junit.gen5.junit4.runner.JUnit5;
 import org.junit.runner.RunWith;
@@ -82,12 +82,55 @@ public class ExtensionContextStoringTests {
 		}
 	}
 
+	@Nested
+	class LocalVisibility {
+
+		@Test
+		void valueCanBeRetrievedAndChanged() {
+			assertNull(parentContext.get("a key"));
+			parentContext.store("a key", "a value", Visibility.LOCAL);
+			assertEquals("a value", parentContext.get("a key"));
+
+			parentContext.store("a key", "other value", Visibility.LOCAL);
+			assertEquals("other value", parentContext.get("a key"));
+		}
+
+		@Test
+		void valueFromParentIsNotVisibleInChild() {
+			parentContext.store("a key", "a value", Visibility.LOCAL);
+			assertNull(childContext.get("a key"));
+
+			childContext.store("a key", "other value");
+			assertEquals("other value", childContext.get("a key"));
+			assertEquals("a value", parentContext.get("a key"));
+		}
+
+		@Test
+		void valuesNotVisibleInOtherExtension() {
+			parentContext.store("a key", "a value");
+			parentContext.setCurrentExtension(new Object());
+			assertNull(parentContext.get("a key"));
+
+			parentContext.setCurrentExtension(currentExtension);
+			assertEquals("a value", parentContext.get("a key"));
+		}
+
+		@Test
+		void getWithDefaultWillStoreTheValue() {
+			String value = (String) parentContext.getWithDefault("a key", key -> "a value for " + key,
+				Visibility.LOCAL);
+
+			assertEquals("a value for a key", value);
+			assertEquals("a value for a key", parentContext.get("a key"));
+		}
+	}
+
 	@Test
 	void sameKeyCannotBeUsedWithDifferentVisibility() {
-		parentContext.store("a key", "a value", ExtensionContext.Visibility.DEFAULT);
+		parentContext.store("a key", "a value", Visibility.DEFAULT);
 
 		RuntimeException thrown = expectThrows(RuntimeException.class,
-			() -> parentContext.store("a key", "a value", ExtensionContext.Visibility.LOCAL));
+			() -> parentContext.store("a key", "a value", Visibility.LOCAL));
 	}
 
 	//local visibility
